@@ -5,7 +5,7 @@
 #include <Adafruit_SSD1306.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
-#include <ArduinoOTA.h>
+#include "ota_manager.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -14,6 +14,7 @@
 const int ledPin = 12;  // GPIO12
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 AsyncWebServer server(80);
+OTAManager otaManager(display);
 
 // Function to display text on OLED
 void displayText(const char* text, int line = 0) {
@@ -162,42 +163,8 @@ void setup() {
   Serial.print("Server running on IP: ");
   Serial.println(WiFi.localIP());
 
-  // OTA Setup
-  ArduinoOTA.setHostname("esp32-blinker");
-  ArduinoOTA.setPassword("haslo123"); 
-  
-  ArduinoOTA.onStart([]() {
-    displayText("OTA Update Start");
-    Serial.println("Start OTA update");
-  });
-
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    char progressStr[32];
-    sprintf(progressStr, "Progress: %u%%", (progress / (total / 100)));
-    displayText(progressStr);
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-
-  ArduinoOTA.onEnd([]() {
-    displayLines("OTA Update Complete", "Please reset", "the device");
-    Serial.println("\nEnd OTA update");
-    delay(5000);
-    ESP.restart();
-  });
-
-  ArduinoOTA.onError([](ota_error_t error) {
-    char errorStr[32];
-    sprintf(errorStr, "Error[%u]: ", error);
-    displayText(errorStr);
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-
-  ArduinoOTA.begin();
+  // Initialize OTA
+  otaManager.begin("esp32-blinker", "haslo123");
   Serial.println("OTA Ready");
 
   // Display final connection info
@@ -210,5 +177,5 @@ void setup() {
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  otaManager.handle();
 } 
