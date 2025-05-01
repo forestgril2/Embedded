@@ -25,19 +25,21 @@ void DisplayManager::display() {
     _display.display();
 }
 
-void DisplayManager::displayText(const char* text, int line) {
+void DisplayManager::_setupTextDisplay() {
     _display.clearDisplay();
     _display.setTextSize(1);
-    _display.setCursor(0, line * 10);
     _display.setTextColor(SSD1306_WHITE);
+}
+
+void DisplayManager::displayText(const char* text, int line) {
+    _setupTextDisplay();
+    _display.setCursor(0, line * 10);
     _display.println(text);
     _display.display();
 }
 
 void DisplayManager::displayLines(const std::vector<String>& lines) {
-    _display.clearDisplay();
-    _display.setTextSize(1);
-    _display.setTextColor(SSD1306_WHITE);
+    _setupTextDisplay();
     
     for (size_t i = 0; i < lines.size(); i++) {
         _display.setCursor(0, i * 10);

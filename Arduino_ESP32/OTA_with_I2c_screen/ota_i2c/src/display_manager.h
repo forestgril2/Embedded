@@ -20,6 +20,7 @@ public:
 private:
     Adafruit_SSD1306 _display;
     void _setupDisplay();
+    void _setupTextDisplay();
 };
 
 #endif // DISPLAY_MANAGER_H 
