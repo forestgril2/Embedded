@@ -39,30 +39,23 @@ void displayLines(const char* line1, const char* line2 = "", const char* line3 =
   display.display();
 }
 
-// Blink handler
-void handleBlink(AsyncWebServerRequest *request) {
-  if (request->hasParam("count")) {
-    String countStr = request->getParam("count")->value();
-    int count = countStr.toInt();
-    request->send(200, "text/plain", "Blinking " + String(count) + " times");
-
-    for (int i = 0; i < count; i++) {
-      digitalWrite(ledPin, HIGH);
-      delay(300);
-      digitalWrite(ledPin, LOW);
-      delay(300);
-    }
+// Text display handler
+void handleText(AsyncWebServerRequest *request) {
+  if (request->hasParam("text", true)) {
+    String text = request->getParam("text", true)->value();
+    displayText(text.c_str());
+    request->send(200, "text/plain", "Text displayed: " + text);
   } else {
-    request->send(400, "text/plain", "Missing 'count' parameter");
+    request->send(400, "text/plain", "Missing 'text' parameter");
   }
 }
 
 // Root page with form
 void handleRoot(AsyncWebServerRequest *request) {
   request->send(200, "text/html",
-                "<form action=\"/blink\">"
-                "Blink count: <input name=\"count\" type=\"number\">"
-                "<input type=\"submit\" value=\"Blink\">"
+                "<form action=\"/text\" method=\"POST\">"
+                "Text to display: <input name=\"text\" type=\"text\">"
+                "<input type=\"submit\" value=\"Display\">"
                 "</form>");
 }
 
@@ -81,7 +74,7 @@ void setup() {
 
   // Display initial commit info
   displayLines("Firmware Info:", 
-               "Version: 1.0",
+               "Commit: " GIT_COMMIT_HASH,
                "Ready to start");
   delay(3000);
 
@@ -95,22 +88,16 @@ void setup() {
     ESP.restart();
   }
 
-  displayText("WiFi Connected!");
+  String ip = WiFi.localIP().toString();
+  displayLines("WiFi Connected!", 
+               ip.c_str(),
+               "OTA: esp32-blinker");
   Serial.print("Connected! IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(ip);
 
   // Async server routes
   server.on("/", HTTP_GET, handleRoot);
-  server.on("/blink", HTTP_GET, handleBlink);
-  server.on("/display", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("text")) {
-      String text = request->getParam("text")->value();
-      displayText(text.c_str());
-      request->send(200, "text/plain", "Text displayed: " + text);
-    } else {
-      request->send(400, "text/plain", "Missing 'text' parameter");
-    }
-  });
+  server.on("/text", HTTP_POST, handleText);
 
   server.begin();
   Serial.println("HTTP server started");
