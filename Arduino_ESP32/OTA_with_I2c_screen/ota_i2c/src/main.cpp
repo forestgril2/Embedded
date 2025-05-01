@@ -1,10 +1,9 @@
 #include <WiFiManager.h>
 #include <WiFi.h>
 #include <Wire.h>
-#include <ESPAsyncWebServer.h>
-#include <AsyncTCP.h>
 #include "ota_manager.h"
 #include "display_manager.h"
+#include "server_manager.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -12,56 +11,8 @@
 
 const int ledPin = 12;  // GPIO12
 DisplayManager display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_RESET);
-AsyncWebServer server(80);
+ServerManager serverManager(display);
 OTAManager otaManager(display);
-
-// Text display handler
-void handleText(AsyncWebServerRequest *request) {
-  if (request->hasParam("text", true)) {
-    String text = request->getParam("text", true)->value();
-    display.displayText(text.c_str());
-    request->send(200, "text/plain", "Text displayed: " + text);
-  } else {
-    request->send(400, "text/plain", "Missing 'text' parameter");
-  }
-}
-
-// Root page with form
-void handleRoot(AsyncWebServerRequest *request) {
-  request->send(200, "text/html",
-                "<form action=\"/text\" method=\"POST\">"
-                "Text to display: <input name=\"text\" type=\"text\">"
-                "<input type=\"submit\" value=\"Display\">"
-                "</form>");
-}
-
-// Memory status handler
-void handleMemoryStatus(AsyncWebServerRequest *request) {
-  char response[256];
-  uint32_t freeHeap = ESP.getFreeHeap();
-  uint32_t totalHeap = ESP.getHeapSize();
-  uint32_t freePsram = ESP.getFreePsram();
-  uint32_t totalPsram = ESP.getPsramSize();
-  uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
-  uint32_t sketchSize = ESP.getSketchSize();
-  
-  sprintf(response, 
-          "{\"heap\":{\"free\":%u,\"total\":%u},\"psram\":{\"free\":%u,\"total\":%u},\"flash\":{\"free\":%u,\"total\":%u}}",
-          freeHeap, totalHeap, freePsram, totalPsram, freeSketchSpace, sketchSize);
-  
-  request->send(200, "application/json", response);
-}
-
-// Version info handler
-void handleVersion(AsyncWebServerRequest *request) {
-  String versionInfo;
-  #ifdef GIT_COMMIT_HASH
-    versionInfo = "Firmware Info:\nCommit: " + String(GIT_COMMIT_HASH);
-  #else
-    versionInfo = "Firmware Info:\nCommit: unknown";
-  #endif
-  request->send(200, "text/plain", versionInfo);
-}
 
 void setup() {
   Serial.begin(115200);
@@ -87,22 +38,8 @@ void setup() {
     ESP.restart();
   }
 
-  // Async server routes
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/text", HTTP_POST, handleText);
-  server.on("/version", HTTP_GET, handleVersion);
-  
-  // Add a debug endpoint
-  server.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request) {
-    String debugInfo = "Debug Info:\n";
-    debugInfo += "WiFi Status: " + String(WiFi.status()) + "\n";
-    debugInfo += "IP Address: " + WiFi.localIP().toString() + "\n";
-    debugInfo += "MAC Address: " + WiFi.macAddress() + "\n";
-    debugInfo += "RSSI: " + String(WiFi.RSSI()) + " dBm\n";
-    request->send(200, "text/plain", debugInfo);
-  });
-
-  server.begin();
+  // Initialize server
+  serverManager.begin();
   Serial.println("HTTP server started");
   Serial.print("Server running on IP: ");
   Serial.println(WiFi.localIP());
@@ -133,4 +70,5 @@ void setup() {
 
 void loop() {
   otaManager.handle();
+  serverManager.handleClient();
 } 
