@@ -75,9 +75,9 @@ void setup() {
   }
 
   WiFiManager wm;
-  display.displayLines("WiFi Setup Mode", 
+  display.displayLines({"WiFi Setup Mode", 
                "Connect to:", 
-               "ESP32-Setup");
+               "ESP32-Setup"});
   bool ok = wm.autoConnect("ESP32-Setup");
 
   if (!ok) {
@@ -113,11 +113,22 @@ void setup() {
 
   // Display final connection info
   String ip = WiFi.localIP().toString();
-  display.displayLines("WiFi Connected!", 
-               ip.c_str(),
-               "OTA: esp32-blinker");
-  Serial.print("Connected! IP: ");
-  Serial.println(ip);
+  #ifdef GIT_COMMIT_HASH
+    std::vector<String> lines = {
+        "WiFi Connected!",
+        ip,
+        "OTA: esp32-blinker",
+        "Commit: " + String(GIT_COMMIT_HASH)
+    };
+    display.displayLines(lines);
+  #else
+    std::vector<String> lines = {
+        "WiFi Connected!",
+        ip,
+        "OTA: esp32-blinker"
+    };
+    display.displayLines(lines);
+  #endif
 }
 
 void loop() {

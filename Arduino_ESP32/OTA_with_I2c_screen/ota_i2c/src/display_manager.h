@@ -3,6 +3,8 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <vector>
+#include <Arduino.h>
 
 class DisplayManager {
 public:
@@ -12,7 +14,7 @@ public:
     void display();
     
     void displayText(const char* text, int line = 0);
-    void displayLines(const char* line1, const char* line2 = "", const char* line3 = "");
+    void displayLines(const std::vector<String>& lines);
     void displayMemoryInfo();
 
 private:

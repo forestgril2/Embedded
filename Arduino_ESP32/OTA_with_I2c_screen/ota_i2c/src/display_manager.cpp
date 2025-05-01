@@ -34,21 +34,23 @@ void DisplayManager::displayText(const char* text, int line) {
     _display.display();
 }
 
-void DisplayManager::displayLines(const char* line1, const char* line2, const char* line3) {
+void DisplayManager::displayLines(const std::vector<String>& lines) {
     _display.clearDisplay();
     _display.setTextSize(1);
-    _display.setCursor(0, 0);
     _display.setTextColor(SSD1306_WHITE);
-    _display.println(line1);
-    _display.setCursor(0, 10);
-    _display.println(line2);
-    _display.setCursor(0, 20);
-    _display.println(line3);
+    
+    for (size_t i = 0; i < lines.size(); i++) {
+        _display.setCursor(0, i * 10);
+        _display.println(lines[i].c_str());
+    }
+    
     _display.display();
 }
 
 void DisplayManager::displayMemoryInfo() {
+    std::vector<String> lines;
     char memInfo[64];
+    
     uint32_t freeHeap = ESP.getFreeHeap();
     uint32_t totalHeap = ESP.getHeapSize();
     uint32_t freePsram = ESP.getFreePsram();
@@ -56,21 +58,16 @@ void DisplayManager::displayMemoryInfo() {
     uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
     uint32_t sketchSize = ESP.getSketchSize();
     
-    _display.clearDisplay();
-    _display.setTextSize(1);
-    _display.setCursor(0, 0);
-    _display.setTextColor(SSD1306_WHITE);
-    
     sprintf(memInfo, "Heap: %u/%u", freeHeap, totalHeap);
-    _display.println(memInfo);
+    lines.push_back(String(memInfo));
     
     if (totalPsram > 0) {
         sprintf(memInfo, "PSRAM: %u/%u", freePsram, totalPsram);
-        _display.println(memInfo);
+        lines.push_back(String(memInfo));
     }
     
     sprintf(memInfo, "Flash: %u/%u", freeSketchSpace, sketchSize);
-    _display.println(memInfo);
+    lines.push_back(String(memInfo));
     
-    _display.display();
+    displayLines(lines);
 } 

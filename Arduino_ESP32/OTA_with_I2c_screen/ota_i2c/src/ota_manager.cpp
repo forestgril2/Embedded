@@ -32,7 +32,7 @@ void OTAManager::onProgress(unsigned int progress, unsigned int total) {
 }
 
 void OTAManager::onEnd() {
-    _display.displayLines("OTA Update Complete", "Please reset", "the device");
+    _display.displayLines({"OTA Update Complete", "Please reset", "the device"});
     delay(5000);
     ESP.restart();
 }
