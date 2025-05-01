@@ -39,6 +39,35 @@ void displayLines(const char* line1, const char* line2 = "", const char* line3 =
   display.display();
 }
 
+// Function to display memory information
+void displayMemoryInfo() {
+  char memInfo[64];
+  uint32_t freeHeap = ESP.getFreeHeap();
+  uint32_t totalHeap = ESP.getHeapSize();
+  uint32_t freePsram = ESP.getFreePsram();
+  uint32_t totalPsram = ESP.getPsramSize();
+  uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
+  uint32_t sketchSize = ESP.getSketchSize();
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.setTextColor(SSD1306_WHITE);
+  
+  sprintf(memInfo, "Heap: %u/%u", freeHeap, totalHeap);
+  display.println(memInfo);
+  
+  if (totalPsram > 0) {
+    sprintf(memInfo, "PSRAM: %u/%u", freePsram, totalPsram);
+    display.println(memInfo);
+  }
+  
+  sprintf(memInfo, "Flash: %u/%u", freeSketchSpace, sketchSize);
+  display.println(memInfo);
+  
+  display.display();
+}
+
 // Text display handler
 void handleText(AsyncWebServerRequest *request) {
   if (request->hasParam("text", true)) {
@@ -59,6 +88,23 @@ void handleRoot(AsyncWebServerRequest *request) {
                 "</form>");
 }
 
+// Memory status handler
+void handleMemoryStatus(AsyncWebServerRequest *request) {
+  char response[256];
+  uint32_t freeHeap = ESP.getFreeHeap();
+  uint32_t totalHeap = ESP.getHeapSize();
+  uint32_t freePsram = ESP.getFreePsram();
+  uint32_t totalPsram = ESP.getPsramSize();
+  uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
+  uint32_t sketchSize = ESP.getSketchSize();
+  
+  sprintf(response, 
+          "{\"heap\":{\"free\":%u,\"total\":%u},\"psram\":{\"free\":%u,\"total\":%u},\"flash\":{\"free\":%u,\"total\":%u}}",
+          freeHeap, totalHeap, freePsram, totalPsram, freeSketchSpace, sketchSize);
+  
+  request->send(200, "application/json", response);
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(ledPin, OUTPUT);
@@ -76,6 +122,10 @@ void setup() {
   displayLines("Firmware Info:", 
                "Commit: " GIT_COMMIT_HASH,
                "Ready to start");
+  delay(3000);
+
+  // Display memory information
+  displayMemoryInfo();
   delay(3000);
 
   WiFiManager wm;
@@ -98,6 +148,7 @@ void setup() {
   // Async server routes
   server.on("/", HTTP_GET, handleRoot);
   server.on("/text", HTTP_POST, handleText);
+  server.on("/memory", HTTP_GET, handleMemoryStatus);
 
   server.begin();
   Serial.println("HTTP server started");
