@@ -105,6 +105,17 @@ void handleMemoryStatus(AsyncWebServerRequest *request) {
   request->send(200, "application/json", response);
 }
 
+// Version info handler
+void handleVersion(AsyncWebServerRequest *request) {
+  String versionInfo;
+  #ifdef GIT_COMMIT_HASH
+    versionInfo = "Firmware Info:\nCommit: " + String(GIT_COMMIT_HASH);
+  #else
+    versionInfo = "Firmware Info:\nCommit: unknown";
+  #endif
+  request->send(200, "text/plain", versionInfo);
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(ledPin, OUTPUT);
@@ -118,17 +129,10 @@ void setup() {
   display.clearDisplay();
   display.display();
 
-  // Display initial commit info
-  displayLines("Firmware Info:", 
-               "Commit: " GIT_COMMIT_HASH,
-               "Ready to start");
-  delay(3000);
-
-  // Display memory information
-  displayMemoryInfo();
-  delay(3000);
-
   WiFiManager wm;
+  displayLines("WiFi Setup Mode", 
+               "Connect to:", 
+               "ESP32-Setup");
   bool ok = wm.autoConnect("ESP32-Setup");
 
   if (!ok) {
@@ -138,20 +142,25 @@ void setup() {
     ESP.restart();
   }
 
-  String ip = WiFi.localIP().toString();
-  displayLines("WiFi Connected!", 
-               ip.c_str(),
-               "OTA: esp32-blinker");
-  Serial.print("Connected! IP: ");
-  Serial.println(ip);
-
   // Async server routes
   server.on("/", HTTP_GET, handleRoot);
   server.on("/text", HTTP_POST, handleText);
-  server.on("/memory", HTTP_GET, handleMemoryStatus);
+  server.on("/version", HTTP_GET, handleVersion);
+  
+  // Add a debug endpoint
+  server.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String debugInfo = "Debug Info:\n";
+    debugInfo += "WiFi Status: " + String(WiFi.status()) + "\n";
+    debugInfo += "IP Address: " + WiFi.localIP().toString() + "\n";
+    debugInfo += "MAC Address: " + WiFi.macAddress() + "\n";
+    debugInfo += "RSSI: " + String(WiFi.RSSI()) + " dBm\n";
+    request->send(200, "text/plain", debugInfo);
+  });
 
   server.begin();
   Serial.println("HTTP server started");
+  Serial.print("Server running on IP: ");
+  Serial.println(WiFi.localIP());
 
   // OTA Setup
   ArduinoOTA.setHostname("esp32-blinker");
@@ -172,7 +181,6 @@ void setup() {
   ArduinoOTA.onEnd([]() {
     displayLines("OTA Update Complete", "Please reset", "the device");
     Serial.println("\nEnd OTA update");
-    // Wait for 5 seconds before restarting
     delay(5000);
     ESP.restart();
   });
@@ -191,7 +199,14 @@ void setup() {
 
   ArduinoOTA.begin();
   Serial.println("OTA Ready");
-  displayText("OTA Ready");
+
+  // Display final connection info
+  String ip = WiFi.localIP().toString();
+  displayLines("WiFi Connected!", 
+               ip.c_str(),
+               "OTA: esp32-blinker");
+  Serial.print("Connected! IP: ");
+  Serial.println(ip);
 }
 
 void loop() {
