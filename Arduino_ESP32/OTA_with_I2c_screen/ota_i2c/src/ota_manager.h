@@ -2,16 +2,16 @@
 #define OTA_MANAGER_H
 
 #include <ArduinoOTA.h>
-#include <Adafruit_SSD1306.h>
+#include "display_manager.h"
 
 class OTAManager {
 public:
-    OTAManager(Adafruit_SSD1306& display);
+    OTAManager(DisplayManager& display);
     void begin(const char* hostname, const char* password);
     void handle();
 
 private:
-    Adafruit_SSD1306& _display;
+    DisplayManager& _display;
     
     void onStart();
     void onProgress(unsigned int progress, unsigned int total);
