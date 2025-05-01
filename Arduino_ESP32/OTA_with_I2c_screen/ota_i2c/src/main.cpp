@@ -4,6 +4,7 @@
 #include "ota_manager.h"
 #include "display_manager.h"
 #include "server_manager.h"
+#include "stepper_manager.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -11,7 +12,8 @@
 
 const int ledPin = 12;  // GPIO12
 DisplayManager display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_RESET);
-ServerManager serverManager(display);
+StepperManager stepper(display);
+ServerManager serverManager(display, stepper);
 OTAManager otaManager(display);
 
 void setup() {
@@ -24,6 +26,9 @@ void setup() {
     Serial.println(F("SSD1306 allocation failed"));
     while (1);
   }
+
+  // Initialize stepper motor
+  stepper.begin();
 
   WiFiManager wm;
   display.displayLines({"WiFi Setup Mode", 
@@ -71,4 +76,5 @@ void setup() {
 void loop() {
   otaManager.handle();
   serverManager.handleClient();
+  stepper.run();  // Update stepper motor position
 } 
