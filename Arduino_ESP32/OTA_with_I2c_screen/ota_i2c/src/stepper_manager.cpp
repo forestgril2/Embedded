@@ -1,43 +1,66 @@
 #include "stepper_manager.h"
-#include <AccelStepper.h>
+#include <FastAccelStepper.h>
+#include <Arduino.h>
 
 StepperManager::StepperManager(DisplayManager& display)
-    : _display(display),
-      _stepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN) {
+    : _display(display) {
 }
 
 void StepperManager::begin() {
     pinMode(ENABLE_PIN, OUTPUT);
     digitalWrite(ENABLE_PIN, LOW);  // Enable the stepper driver
     
-    // Set default speed and acceleration
-    _stepper.setMaxSpeed(1000.0);
-    _stepper.setAcceleration(500.0);
+    // Initialize the stepper engine
+    _engine.init();
     
-    _display.displayText("Stepper initialized");
+    // Create a stepper instance
+    _stepper = _engine.stepperConnectToPin(STEP_PIN);
+    if (_stepper) {
+        _stepper->setDirectionPin(DIR_PIN);
+        _stepper->setEnablePin(ENABLE_PIN);
+        _stepper->setAutoEnable(true);
+        
+        // Set default speed and acceleration
+        _stepper->setSpeedInHz(1000);  // steps per second
+        _stepper->setAcceleration(500);  // steps per second squared
+        
+        _display.displayText("Stepper initialized");
+    } else {
+        _display.displayText("Stepper init failed");
+    }
 }
 
 void StepperManager::moveTo(long position) {
-    _stepper.moveTo(position);
+    if (_stepper) {
+        _stepper->moveTo(position);
+    }
 }
 
 void StepperManager::run() {
-    _stepper.run();
+    // FastAccelStepper handles running automatically
 }
 
 void StepperManager::stop() {
-    _stepper.stop();
-    digitalWrite(ENABLE_PIN, HIGH);  // Disable the stepper driver
+    if (_stepper) {
+        _stepper->stopMove();
+    }
 }
 
 void StepperManager::setSpeed(float speed) {
-    _stepper.setMaxSpeed(speed);
+    if (_stepper) {
+        _stepper->setSpeedInHz(speed);
+    }
 }
 
 void StepperManager::setAcceleration(float acceleration) {
-    _stepper.setAcceleration(acceleration);
+    if (_stepper) {
+        _stepper->setAcceleration(acceleration);
+    }
 }
 
 bool StepperManager::isRunning() {
-    return _stepper.isRunning();
+    if (_stepper) {
+        return _stepper->isRunning();
+    }
+    return false;
 } 
