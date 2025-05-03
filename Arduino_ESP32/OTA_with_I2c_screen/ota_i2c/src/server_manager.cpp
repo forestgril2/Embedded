@@ -64,21 +64,30 @@ void ServerManager::handleText(AsyncWebServerRequest *request) {
 void ServerManager::handleRoot(AsyncWebServerRequest *request) {
     String html = "<html><body>";
     html += "<h1>ESP32 Stepper Motor Control</h1>";
+    html += "<p>Current Position: " + String(stepper.getCurrentPosition()) + " steps</p>";
+    html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
+    if (stepper.isRunning()) {
+        html += "<p style='color: blue;'>Motor is moving...</p>";
+    } else {
+        html += "<p style='color: green;'>Motor is stopped</p>";
+    }
     html += "<form action=\"/text\" method=\"POST\">";
     html += "Text to display: <input name=\"text\" type=\"text\">";
     html += "<input type=\"submit\" value=\"Display\">";
     html += "</form>";
     html += "<h2>Stepper Motor Control</h2>";
     html += "<form action=\"/stepper/move\" method=\"POST\">";
-    html += "Position: <input name=\"position\" type=\"number\">";
+    html += "Target Position: <input name=\"position\" type=\"number\" value=\"" + String(stepper.getCurrentPosition()) + "\">";
+    html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) + 800\">+1 Rev</button>";
+    html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) - 800\">-1 Rev</button>";
     html += "<input type=\"submit\" value=\"Move\">";
     html += "</form>";
     html += "<form action=\"/stepper/speed\" method=\"POST\">";
-    html += "Speed: <input name=\"speed\" type=\"number\">";
+    html += "Speed (steps/sec): <input name=\"speed\" type=\"number\" value=\"" + String(stepper.getCurrentSpeed()) + "\">";
     html += "<input type=\"submit\" value=\"Set Speed\">";
     html += "</form>";
     html += "<form action=\"/stepper/accel\" method=\"POST\">";
-    html += "Acceleration: <input name=\"accel\" type=\"number\">";
+    html += "Acceleration (steps/sec²): <input name=\"accel\" type=\"number\" value=\"" + String(stepper.getCurrentAcceleration()) + "\">";
     html += "<input type=\"submit\" value=\"Set Acceleration\">";
     html += "</form>";
     html += "<form action=\"/stepper/stop\" method=\"POST\">";
@@ -127,7 +136,7 @@ void ServerManager::handleStepperMove(AsyncWebServerRequest *request) {
     if (request->hasParam("position", true)) {
         long position = request->getParam("position", true)->value().toInt();
         stepper.moveTo(position);
-        request->send(200, "text/plain", "Moving to position: " + String(position));
+        request->redirect("/");
     } else {
         request->send(400, "text/plain", "Missing 'position' parameter");
     }
@@ -135,14 +144,14 @@ void ServerManager::handleStepperMove(AsyncWebServerRequest *request) {
 
 void ServerManager::handleStepperStop(AsyncWebServerRequest *request) {
     stepper.stop();
-    request->send(200, "text/plain", "Stepper motor stopped");
+    request->redirect("/");
 }
 
 void ServerManager::handleStepperSpeed(AsyncWebServerRequest *request) {
     if (request->hasParam("speed", true)) {
         float speed = request->getParam("speed", true)->value().toFloat();
         stepper.setSpeed(speed);
-        request->send(200, "text/plain", "Speed set to: " + String(speed));
+        request->redirect("/");
     } else {
         request->send(400, "text/plain", "Missing 'speed' parameter");
     }
@@ -152,7 +161,7 @@ void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) {
     if (request->hasParam("accel", true)) {
         float accel = request->getParam("accel", true)->value().toFloat();
         stepper.setAcceleration(accel);
-        request->send(200, "text/plain", "Acceleration set to: " + String(accel));
+        request->redirect("/");
     } else {
         request->send(400, "text/plain", "Missing 'accel' parameter");
     }

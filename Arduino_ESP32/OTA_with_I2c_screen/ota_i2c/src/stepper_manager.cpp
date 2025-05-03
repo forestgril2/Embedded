@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 StepperManager::StepperManager(DisplayManager& display)
-    : _display(display) {
+    : _display(display), _currentSpeed(1000), _currentAcceleration(500) {
 }
 
 void StepperManager::begin() {
@@ -21,8 +21,8 @@ void StepperManager::begin() {
         _stepper->setAutoEnable(true);
         
         // Set default speed and acceleration
-        _stepper->setSpeedInHz(1000);  // steps per second
-        _stepper->setAcceleration(500);  // steps per second squared
+        _stepper->setSpeedInHz(_currentSpeed);
+        _stepper->setAcceleration(_currentAcceleration);
         
         _display.displayText("Stepper initialized");
     } else {
@@ -48,12 +48,14 @@ void StepperManager::stop() {
 
 void StepperManager::setSpeed(float speed) {
     if (_stepper) {
+        _currentSpeed = speed;
         _stepper->setSpeedInHz(speed);
     }
 }
 
 void StepperManager::setAcceleration(float acceleration) {
     if (_stepper) {
+        _currentAcceleration = acceleration;
         _stepper->setAcceleration(acceleration);
     }
 }
@@ -63,4 +65,23 @@ bool StepperManager::isRunning() {
         return _stepper->isRunning();
     }
     return false;
+}
+
+long StepperManager::getCurrentPosition() {
+    if (_stepper) {
+        return _stepper->getCurrentPosition();
+    }
+    return 0;
+}
+
+float StepperManager::getCurrentSpeed() {
+    return _currentSpeed;
+}
+
+float StepperManager::getCurrentAcceleration() {
+    return _currentAcceleration;
+}
+
+int StepperManager::getMicrosteps() {
+    return MICROSTEPS;
 } 

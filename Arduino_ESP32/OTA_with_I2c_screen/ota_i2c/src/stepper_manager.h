@@ -14,6 +14,10 @@ public:
     void setSpeed(float speed);
     void setAcceleration(float acceleration);
     bool isRunning();
+    long getCurrentPosition();
+    float getCurrentSpeed();
+    float getCurrentAcceleration();
+    int getMicrosteps();
 
 private:
     DisplayManager& _display;
@@ -22,6 +26,9 @@ private:
     static const int STEP_PIN = 13;    // GPIO13 for step signal
     static const int DIR_PIN = 14;     // GPIO14 for direction signal
     static const int ENABLE_PIN = 12;  // GPIO12 for enable signal
+    static const int MICROSTEPS = 4;   // 1/4 microstepping (800 steps/rev)
+    float _currentSpeed;               // Track current speed
+    float _currentAcceleration;        // Track current acceleration
 };
 
 #endif // STEPPER_MANAGER_H 

@@ -10,12 +10,6 @@ public:
     ServerManager(DisplayManager& display, StepperManager& stepper);
     void begin();
     void handleClient();
-
-private:
-    AsyncWebServer server;
-    DisplayManager& display;
-    StepperManager& stepper;
-
     void handleText(AsyncWebServerRequest *request);
     void handleRoot(AsyncWebServerRequest *request);
     void handleMemoryStatus(AsyncWebServerRequest *request);
@@ -25,6 +19,11 @@ private:
     void handleStepperStop(AsyncWebServerRequest *request);
     void handleStepperSpeed(AsyncWebServerRequest *request);
     void handleStepperAccel(AsyncWebServerRequest *request);
+
+private:
+    AsyncWebServer server;
+    DisplayManager& display;
+    StepperManager& stepper;
 };
 
 #endif // SERVER_MANAGER_H 
