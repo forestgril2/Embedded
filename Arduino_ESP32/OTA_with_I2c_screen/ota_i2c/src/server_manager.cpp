@@ -1,6 +1,7 @@
 #include "server_manager.h"
 #include <ESP.h>
 #include "git_version.h"
+#include "config.h"
 
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
     : server(80), display(display), stepper(stepper) {
@@ -43,6 +44,18 @@ void ServerManager::begin() {
 
     server.on("/stepper/accel", HTTP_POST, [this](AsyncWebServerRequest *request) {
         this->handleStepperAccel(request);
+    });
+
+    server.on("/led/pin", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        this->handleLedPinConfig(request);
+    });
+
+    server.on("/led/test", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        this->handleLedTest(request);
+    });
+
+    server.on("/wifi/reset", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        this->handleWifiReset(request);
     });
 
     server.begin();
@@ -94,6 +107,26 @@ void ServerManager::handleRoot(AsyncWebServerRequest *request) {
     html += "<form action=\"/stepper/stop\" method=\"POST\">";
     html += "<input type=\"submit\" value=\"Stop Motor\">";
     html += "</form>";
+    
+    // Add LED configuration section
+    html += "<h2>LED Configuration</h2>";
+    html += "<form action=\"/led/pin\" method=\"POST\">";
+    html += "LED Pin (1-39): <input name=\"pin\" type=\"number\" min=\"1\" max=\"39\" value=\"" + String(getLedPin()) + "\">";
+    html += "<input type=\"submit\" value=\"Update LED Pin\">";
+    html += "</form>";
+    
+    // Add LED test button
+    html += "<h2>LED Test</h2>";
+    html += "<form action=\"/led/test\" method=\"GET\">";
+    html += "<input type=\"submit\" value=\"Test LED\">";
+    html += "</form>";
+    
+    // Add WiFi reset button
+    html += "<h2>WiFi Configuration</h2>";
+    html += "<form action=\"/wifi/reset\" method=\"GET\">";
+    html += "<input type=\"submit\" value=\"Reset WiFi\" style=\"color: red;\">";
+    html += "</form>";
+    
     html += "</body></html>";
     request->send(200, "text/html", html);
 }
@@ -166,4 +199,37 @@ void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) {
     } else {
         request->send(400, "text/plain", "Missing 'accel' parameter");
     }
+}
+
+void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) {
+    if (request->hasParam("pin", true)) {
+        int newPin = request->getParam("pin", true)->value().toInt();
+        if (newPin > 0 && newPin < 40) {  // Validate pin number
+            saveLedPin(newPin);
+            request->redirect("/");  // Redirect to home page after successful update
+        } else {
+            request->send(400, "text/plain", "Invalid pin number. Must be between 1 and 39.");
+        }
+    } else {
+        request->send(400, "text/plain", "Missing 'pin' parameter");
+    }
+}
+
+void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
+    int ledPin = getLedPin();
+    // Blink LED 3 times
+    for(int i = 0; i < 3; i++) {
+        setLedOn(ledPin);
+        delay(200);
+        setLedOff(ledPin);
+        delay(200);
+    }
+    request->send(200, "text/plain", "LED test completed on pin " + String(ledPin));
+}
+
+void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Resetting WiFi configuration...");
+    delay(1000);  // Give time for response to be sent
+    WiFi.disconnect(true);
+    ESP.restart();
 } 

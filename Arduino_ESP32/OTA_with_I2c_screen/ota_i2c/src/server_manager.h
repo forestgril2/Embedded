@@ -19,6 +19,9 @@ public:
     void handleStepperStop(AsyncWebServerRequest *request);
     void handleStepperSpeed(AsyncWebServerRequest *request);
     void handleStepperAccel(AsyncWebServerRequest *request);
+    void handleLedTest(AsyncWebServerRequest *request);
+    void handleLedPinConfig(AsyncWebServerRequest *request);
+    void handleWifiReset(AsyncWebServerRequest *request);
 
 private:
     AsyncWebServer server;

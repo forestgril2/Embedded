@@ -6,12 +6,12 @@
 #include "server_manager.h"
 #include "stepper_manager.h"
 #include "git_version.h"
+#include "config.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 
-const int ledPin = 12;  // GPIO12
 DisplayManager display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_RESET);
 StepperManager stepper(display);
 ServerManager serverManager(display, stepper);
@@ -19,13 +19,30 @@ OTAManager otaManager(display);
 
 void setup() {
   Serial.begin(115200);
+  int ledPin = getLedPin();
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
+  setLedOff(ledPin);  // Ensure LED starts OFF
+  
+  // Test LED functionality
+  for(int i = 0; i < 3; i++) {
+    setLedOn(ledPin);
+    delay(200);
+    setLedOff(ledPin);
+    delay(200);
+  }
 
   // Initialize OLED display
   if (!display.begin()) {
     Serial.println(F("SSD1306 allocation failed"));
-    while (1);
+    // Blink LED to indicate error
+    for(int i = 0; i < 5; i++) {
+      setLedOn(ledPin);
+      delay(500);
+      setLedOff(ledPin);
+      delay(500);
+    }
+    // Try to restart the device
+    ESP.restart();
   }
 
   // Initialize stepper motor
