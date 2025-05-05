@@ -17,11 +17,15 @@ This project implements an ESP32-based device with an I2C OLED display that supp
 - I2C OLED display (128x64 pixels)
 - WiFi connectivity with automatic configuration
 - Web server for remote control with endpoints:
-  - `/` - Root page with text input form
+  - `/` - Root page with text input form and stepper motor control interface
   - `/text` - POST endpoint to display text on OLED
   - `/version` - GET endpoint to display firmware version
   - `/memory` - GET endpoint to show memory status
   - `/debug` - GET endpoint for debug information
+  - `/stepper/move` - POST endpoint to control stepper motor position
+  - `/stepper/stop` - POST endpoint to stop the stepper motor
+  - `/stepper/speed` - POST endpoint to set stepper motor speed
+  - `/stepper/accel` - POST endpoint to set stepper motor acceleration
 - OTA (Over-The-Air) firmware updates
 - Memory status monitoring
 - Debug information display
@@ -113,11 +117,15 @@ Once connected to your network:
 1. Open a web browser
 2. Enter the IP address shown on the display
 3. Available endpoints:
-   - `http://<IP>/` - Root page with text input form
+   - `http://<IP>/` - Root page with text input form and stepper motor control interface
    - `http://<IP>/text` - POST endpoint to display text on OLED
    - `http://<IP>/version` - GET endpoint to display firmware version
    - `http://<IP>/memory` - GET endpoint to show memory status
    - `http://<IP>/debug` - GET endpoint for debug information
+   - `http://<IP>/stepper/move` - POST endpoint to control stepper motor position
+   - `http://<IP>/stepper/stop` - POST endpoint to stop the stepper motor
+   - `http://<IP>/stepper/speed` - POST endpoint to set stepper motor speed
+   - `http://<IP>/stepper/accel` - POST endpoint to set stepper motor acceleration
 
 ### OTA Updates
 
