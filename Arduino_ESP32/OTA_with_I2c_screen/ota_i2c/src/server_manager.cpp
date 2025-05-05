@@ -1,5 +1,6 @@
 #include "server_manager.h"
 #include <ESP.h>
+#include "git_version.h"
 
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
     : server(80), display(display), stepper(stepper) {
@@ -115,8 +116,8 @@ void ServerManager::handleMemoryStatus(AsyncWebServerRequest *request) {
 
 void ServerManager::handleVersion(AsyncWebServerRequest *request) {
     String versionInfo;
-    #ifdef GIT_COMMIT_HASH
-        versionInfo = "Firmware Info:\nCommit: " + String(GIT_COMMIT_HASH);
+    #ifdef FIRMWARE_GIT_COMMIT_HASH
+        versionInfo = "Firmware Info:\nCommit: " + String(FIRMWARE_GIT_COMMIT_HASH);
     #else
         versionInfo = "Firmware Info:\nCommit: unknown";
     #endif

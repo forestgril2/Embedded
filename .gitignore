@@ -47,3 +47,4 @@ Thumbs.db
 *.exe
 *.out
 *.app 
+Arduino_ESP32/OTA_with_I2c_screen/ota_i2c/src/git_version.h

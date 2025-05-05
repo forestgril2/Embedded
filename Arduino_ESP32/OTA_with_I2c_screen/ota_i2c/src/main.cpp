@@ -5,6 +5,7 @@
 #include "display_manager.h"
 #include "server_manager.h"
 #include "stepper_manager.h"
+#include "git_version.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -55,12 +56,12 @@ void setup() {
 
   // Display final connection info
   String ip = WiFi.localIP().toString();
-  #ifdef GIT_COMMIT_HASH
+  #ifdef FIRMWARE_GIT_COMMIT_HASH
     std::vector<String> lines = {
         "WiFi Connected!",
         ip,
         "OTA: esp32-blinker",
-        "Commit: " + String(GIT_COMMIT_HASH)
+        "Commit: " + String(FIRMWARE_GIT_COMMIT_HASH)
     };
     display.displayLines(lines);
   #else

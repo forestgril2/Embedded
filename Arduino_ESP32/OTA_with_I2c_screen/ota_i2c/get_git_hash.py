@@ -15,14 +15,25 @@ def get_git_hash():
     return "unknown"
 
 
+def generate_version_header(git_hash):
+    header_content = f'''#ifndef GIT_VERSION_H
+#define GIT_VERSION_H
+
+#define FIRMWARE_GIT_COMMIT_HASH "{git_hash}"
+
+#endif // GIT_VERSION_H
+'''
+    with open("src/git_version.h", "w") as f:
+        f.write(header_content)
+
+
 if __name__ == "__main__":
     git_hash = get_git_hash()
     print(f"Current git hash: {git_hash}")
-    # Set the environment variable for PlatformIO
-    os.environ["GIT_COMMIT_HASH"] = git_hash
+    generate_version_header(git_hash)
 else:
     # This part is for PlatformIO
     Import("env")
     git_hash = get_git_hash()
     print(f"Current git hash: {git_hash}")
-    env.Append(CPPDEFINES=[("GIT_COMMIT_HASH", f'\\"{git_hash}\\"')])
+    generate_version_header(git_hash)
