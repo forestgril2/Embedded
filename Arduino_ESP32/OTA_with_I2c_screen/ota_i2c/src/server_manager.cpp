@@ -5,85 +5,109 @@
 #include "led_control.h"
 
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
-    : server(80), display(display), stepper(stepper) {
+    : server(80), display(display), stepper(stepper) 
+{
 }
 
-void ServerManager::begin() {
+void ServerManager::begin() 
+{
     // Setup server routes
-    server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) 
+    {
         this->handleRoot(request);
     });
     
-    server.on("/text", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    server.on("/text", HTTP_POST, [this](AsyncWebServerRequest *request) 
+    {
         this->handleText(request);
     });
     
-    server.on("/version", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server.on("/version", HTTP_GET, [this](AsyncWebServerRequest *request) 
+    {
         this->handleVersion(request);
     });
     
-    server.on("/memory", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server.on("/memory", HTTP_GET, [this](AsyncWebServerRequest *request) 
+    {
         this->handleMemoryStatus(request);
     });
     
-    server.on("/debug", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server.on("/debug", HTTP_GET, [this](AsyncWebServerRequest *request) 
+    {
         this->handleDebug(request);
     });
 
     // Stepper motor control endpoints
-    server.on("/stepper/move", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    server.on("/stepper/move", HTTP_POST, [this](AsyncWebServerRequest *request) 
+    {
         this->handleStepperMove(request);
     });
 
-    server.on("/stepper/stop", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    server.on("/stepper/stop", HTTP_POST, [this](AsyncWebServerRequest *request) 
+    {
         this->handleStepperStop(request);
     });
 
-    server.on("/stepper/speed", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    server.on("/stepper/speed", HTTP_POST, [this](AsyncWebServerRequest *request) 
+    {
         this->handleStepperSpeed(request);
     });
 
-    server.on("/stepper/accel", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    server.on("/stepper/accel", HTTP_POST, [this](AsyncWebServerRequest *request) 
+    {
         this->handleStepperAccel(request);
     });
 
-    server.on("/led/pin", HTTP_POST, [this](AsyncWebServerRequest *request) {
+    server.on("/led/pin", HTTP_POST, [this](AsyncWebServerRequest *request) 
+    {
         this->handleLedPinConfig(request);
     });
 
-    server.on("/led/test", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server.on("/led/test", HTTP_GET, [this](AsyncWebServerRequest *request) 
+    {
         this->handleLedTest(request);
     });
 
-    server.on("/wifi/reset", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server.on("/wifi/reset", HTTP_GET, [this](AsyncWebServerRequest *request) 
+    {
         this->handleWifiReset(request);
     });
 
     server.begin();
+    _initialized = true;
 }
 
-void ServerManager::handleClient() {
+void ServerManager::handleClient() 
+{
     // AsyncWebServer handles clients automatically
 }
 
-void ServerManager::handleText(AsyncWebServerRequest *request) {
-    if (request->hasParam("text", true)) {
+void ServerManager::handleText(AsyncWebServerRequest *request) 
+{
+    if (request->hasParam("text", true)) 
+    {
         String text = request->getParam("text", true)->value();
         display.displayText(text.c_str());
         request->send(200, "text/plain", "Text displayed: " + text);
-    } else {
+    } 
+    else 
+    {
         request->send(400, "text/plain", "Missing 'text' parameter");
     }
 }
 
-void ServerManager::handleRoot(AsyncWebServerRequest *request) {
+void ServerManager::handleRoot(AsyncWebServerRequest *request) 
+{
     String html = "<html><body>";
     html += "<h1>ESP32 Stepper Motor Control</h1>";
     html += "<p>Current Position: " + String(stepper.getCurrentPosition()) + " steps</p>";
     html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
-    if (stepper.isRunning()) {
+    if (stepper.isRunning()) 
+    {
         html += "<p style='color: blue;'>Motor is moving...</p>";
-    } else {
+    } 
+    else 
+    {
         html += "<p style='color: green;'>Motor is stopped</p>";
     }
     html += "<form action=\"/text\" method=\"POST\">";
@@ -132,7 +156,8 @@ void ServerManager::handleRoot(AsyncWebServerRequest *request) {
     request->send(200, "text/html", html);
 }
 
-void ServerManager::handleMemoryStatus(AsyncWebServerRequest *request) {
+void ServerManager::handleMemoryStatus(AsyncWebServerRequest *request) 
+{
     char response[256];
     uint32_t freeHeap = ESP.getFreeHeap();
     uint32_t totalHeap = ESP.getHeapSize();
@@ -148,7 +173,8 @@ void ServerManager::handleMemoryStatus(AsyncWebServerRequest *request) {
     request->send(200, "application/json", response);
 }
 
-void ServerManager::handleVersion(AsyncWebServerRequest *request) {
+void ServerManager::handleVersion(AsyncWebServerRequest *request) 
+{
     String versionInfo;
     #ifdef FIRMWARE_GIT_COMMIT_HASH
         versionInfo = "Firmware Info:\nCommit: " + String(FIRMWARE_GIT_COMMIT_HASH);
@@ -158,7 +184,8 @@ void ServerManager::handleVersion(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", versionInfo);
 }
 
-void ServerManager::handleDebug(AsyncWebServerRequest *request) {
+void ServerManager::handleDebug(AsyncWebServerRequest *request) 
+{
     String debugInfo = "Debug Info:\n";
     debugInfo += "WiFi Status: " + String(WiFi.status()) + "\n";
     debugInfo += "IP Address: " + WiFi.localIP().toString() + "\n";
@@ -167,56 +194,77 @@ void ServerManager::handleDebug(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", debugInfo);
 }
 
-void ServerManager::handleStepperMove(AsyncWebServerRequest *request) {
-    if (request->hasParam("position", true)) {
+void ServerManager::handleStepperMove(AsyncWebServerRequest *request) 
+{
+    if (request->hasParam("position", true)) 
+    {
         long position = request->getParam("position", true)->value().toInt();
         stepper.moveTo(position);
         request->redirect("/");
-    } else {
+    } 
+    else 
+    {
         request->send(400, "text/plain", "Missing 'position' parameter");
     }
 }
 
-void ServerManager::handleStepperStop(AsyncWebServerRequest *request) {
+void ServerManager::handleStepperStop(AsyncWebServerRequest *request) 
+{
     stepper.stop();
     request->redirect("/");
 }
 
-void ServerManager::handleStepperSpeed(AsyncWebServerRequest *request) {
-    if (request->hasParam("speed", true)) {
+void ServerManager::handleStepperSpeed(AsyncWebServerRequest *request) 
+{
+    if (request->hasParam("speed", true)) 
+    {
         float speed = request->getParam("speed", true)->value().toFloat();
         stepper.setSpeed(speed);
         request->redirect("/");
-    } else {
+    } 
+    else 
+    {
         request->send(400, "text/plain", "Missing 'speed' parameter");
     }
 }
 
-void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) {
-    if (request->hasParam("accel", true)) {
+void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) 
+{
+    if (request->hasParam("accel", true)) 
+    {
         float accel = request->getParam("accel", true)->value().toFloat();
         stepper.setAcceleration(accel);
         request->redirect("/");
-    } else {
+    } 
+    else 
+    {
         request->send(400, "text/plain", "Missing 'accel' parameter");
     }
 }
 
-void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) {
-    if (request->hasParam("pin", true)) {
+void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) 
+{
+    if (request->hasParam("pin", true)) 
+    {
         int newPin = request->getParam("pin", true)->value().toInt();
-        if (newPin > 0 && newPin < 40) {  // Validate pin number
+        if (newPin > 0 && newPin < 40)  // Validate pin number
+        {
             LedControl::saveLedPin(newPin);
             request->redirect("/");  // Redirect to home page after successful update
-        } else {
+        } 
+        else 
+        {
             request->send(400, "text/plain", "Invalid pin number. Must be between 1 and 39.");
         }
-    } else {
+    } 
+    else 
+    {
         request->send(400, "text/plain", "Missing 'pin' parameter");
     }
 }
 
-void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
+void ServerManager::handleLedTest(AsyncWebServerRequest *request) 
+{
     int ledPin = LedControl::getLedPin();
     LedControl led(ledPin);
     led.begin();
@@ -224,7 +272,8 @@ void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "LED test completed on pin " + String(ledPin));
 }
 
-void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
+void ServerManager::handleWifiReset(AsyncWebServerRequest *request) 
+{
     request->send(200, "text/plain", "Resetting WiFi configuration...");
     delay(1000);  // Give time for response to be sent
     WiFi.disconnect(true);

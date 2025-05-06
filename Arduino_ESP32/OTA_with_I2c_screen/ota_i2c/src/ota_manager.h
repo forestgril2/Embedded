@@ -4,14 +4,17 @@
 #include <ArduinoOTA.h>
 #include "display_manager.h"
 
-class OTAManager {
+class OTAManager 
+{
 public:
     OTAManager(DisplayManager& display);
     void begin(const char* hostname, const char* password);
+    bool isInitialized() const { return _initialized; }
     void handle();
 
 private:
     DisplayManager& _display;
+    bool _initialized = false;
     
     void onStart();
     void onProgress(unsigned int progress, unsigned int total);

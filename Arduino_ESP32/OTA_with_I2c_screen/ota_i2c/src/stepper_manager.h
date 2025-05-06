@@ -4,7 +4,8 @@
 #include <FastAccelStepper.h>
 #include "display_manager.h"
 
-class StepperManager {
+class StepperManager 
+{
 public:
     StepperManager(DisplayManager& display);
     void begin();

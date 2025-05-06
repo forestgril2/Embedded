@@ -5,10 +5,12 @@
 #include "display_manager.h"
 #include "stepper_manager.h"
 
-class ServerManager {
+class ServerManager 
+{
 public:
     ServerManager(DisplayManager& display, StepperManager& stepper);
     void begin();
+    bool isInitialized() const { return _initialized; }
     void handleClient();
     void handleText(AsyncWebServerRequest *request);
     void handleRoot(AsyncWebServerRequest *request);
@@ -27,6 +29,7 @@ private:
     AsyncWebServer server;
     DisplayManager& display;
     StepperManager& stepper;
+    bool _initialized = false;
 };
 
 #endif // SERVER_MANAGER_H 
