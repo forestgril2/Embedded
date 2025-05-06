@@ -1,5 +1,6 @@
 #include "display_manager.h"
 #include <Wire.h>
+#include "memory_manager.h"
 
 DisplayManager::DisplayManager(int width, int height, int resetPin) : _display(width, height, &Wire, resetPin) {}
 
@@ -51,27 +52,5 @@ void DisplayManager::displayLines(const std::vector<String>& lines)
 
 void DisplayManager::displayMemoryInfo() 
 {
-    std::vector<String> lines;
-    char memInfo[64];
-    
-    uint32_t freeHeap = ESP.getFreeHeap();
-    uint32_t totalHeap = ESP.getHeapSize();
-    uint32_t freePsram = ESP.getFreePsram();
-    uint32_t totalPsram = ESP.getPsramSize();
-    uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
-    uint32_t sketchSize = ESP.getSketchSize();
-    
-    sprintf(memInfo, "Heap: %u/%u", freeHeap, totalHeap);
-    lines.push_back(String(memInfo));
-    
-    if (totalPsram > 0) 
-    {
-        sprintf(memInfo, "PSRAM: %u/%u", freePsram, totalPsram);
-        lines.push_back(String(memInfo));
-    }
-    
-    sprintf(memInfo, "Flash: %u/%u", freeSketchSpace, sketchSize);
-    lines.push_back(String(memInfo));
-    
-    displayLines(lines);
+    displayLines(MemoryManager::getStatusLines());
 } 

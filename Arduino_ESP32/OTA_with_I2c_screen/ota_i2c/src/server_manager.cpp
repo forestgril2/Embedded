@@ -3,6 +3,7 @@
 #include "git_version.h"
 #include "config.h"
 #include "led_control.h"
+#include "memory_manager.h"
 
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
     : server(80), ws("/ws"), display(display), stepper(stepper) {}
@@ -114,19 +115,7 @@ void ServerManager::handleRoot(AsyncWebServerRequest *request) {
 }
 
 void ServerManager::handleMemoryStatus(AsyncWebServerRequest *request) {
-    char response[256];
-    uint32_t freeHeap = ESP.getFreeHeap();
-    uint32_t totalHeap = ESP.getHeapSize();
-    uint32_t freePsram = ESP.getFreePsram();
-    uint32_t totalPsram = ESP.getPsramSize();
-    uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
-    uint32_t sketchSize = ESP.getSketchSize();
-    
-    sprintf(response, 
-            "{\"heap\":{\"free\":%u,\"total\":%u},\"psram\":{\"free\":%u,\"total\":%u},\"flash\":{\"free\":%u,\"total\":%u}}",
-            freeHeap, totalHeap, freePsram, totalPsram, freeSketchSpace, sketchSize);
-    
-    request->send(200, "application/json", response);
+    request->send(200, "application/json", MemoryManager::getStatusJson());
 }
 
 void ServerManager::handleVersion(AsyncWebServerRequest *request) {
