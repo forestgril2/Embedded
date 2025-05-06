@@ -4,12 +4,19 @@ import os
 
 def get_git_hash():
     try:
+        # Check if repository is dirty
+        dirty_check = subprocess.run(
+            ["git", "diff", "--quiet"], capture_output=True
+        )
+        is_dirty = dirty_check.returncode == 1
+
         # Get the short git commit hash
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True
         )
         if result.returncode == 0:
-            return result.stdout.strip()
+            git_hash = result.stdout.strip()
+            return f"[dirty]{git_hash}" if is_dirty else git_hash
     except Exception as e:
         print(f"Error getting git hash: {e}")
     return "unknown"

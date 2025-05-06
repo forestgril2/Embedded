@@ -33,7 +33,7 @@ void displayFinalConnectionInfo()
     display.displayLines({"WiFi Connected!",
                           ip,
                           "OTA: esp32-blinker",
-                          "Commit: " + String(FIRMWARE_GIT_COMMIT_HASH)});
+                          "Commit:" + String(FIRMWARE_GIT_COMMIT_HASH)});
   #else
     display.displayLines({"WiFi Connected!",
                           ip,
