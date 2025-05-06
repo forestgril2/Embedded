@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include "display_manager.h"
 #include "stepper_manager.h"
+#include "pin_manager.h"
 
 class ServerManager 
 {
@@ -25,6 +26,8 @@ public:
     void handleLedTest(AsyncWebServerRequest *request);
     void handleLedPinConfig(AsyncWebServerRequest *request);
     void handleWifiReset(AsyncWebServerRequest *request);
+    void handlePinConfig(AsyncWebServerRequest *request);
+    void handlePinConfigGet(AsyncWebServerRequest *request);
     
     // WebSocket methods
     void broadcastStatus();
@@ -50,6 +53,7 @@ private:
     String generateStepperControlForms();
     String generateLedControlForms();
     String generateWifiControlForm();
+    String generatePinConfigForm();
     String generateFooter();
 };
 
