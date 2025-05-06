@@ -3,20 +3,26 @@
 
 OTAManager::OTAManager(DisplayManager& display) : _display(display) {}
 
-void OTAManager::init(const char* hostname, const char* password) {
-    ArduinoOTA.setHostname(hostname);
-    ArduinoOTA.setPassword(password);
-    
-    ArduinoOTA.onStart([this]() { this->onStart(); });
-    
-    ArduinoOTA.onProgress([this](unsigned int progress, unsigned int total) { this->onProgress(progress, total); });
-    
-    ArduinoOTA.onEnd([this]() { this->onEnd(); });
-    
-    ArduinoOTA.onError([this](ota_error_t error) { this->onError(error); });
+bool OTAManager::init(const char* hostname, const char* password) {
+    try {
+        ArduinoOTA.setHostname(hostname);
+        ArduinoOTA.setPassword(password);
+        
+        ArduinoOTA.onStart([this]() { this->onStart(); });
+        
+        ArduinoOTA.onProgress([this](unsigned int progress, unsigned int total) { this->onProgress(progress, total); });
+        
+        ArduinoOTA.onEnd([this]() { this->onEnd(); });
+        
+        ArduinoOTA.onError([this](ota_error_t error) { this->onError(error); });
 
-    ArduinoOTA.begin();
-    _initialized = true;
+        ArduinoOTA.begin();
+        _initialized = true;
+        return true;
+    } catch (...) {
+        _initialized = false;
+        return false;
+    }
 }
 
 void OTAManager::handle() { ArduinoOTA.handle(); }

@@ -8,7 +8,7 @@ class OTAManager
 {
 public:
     OTAManager(DisplayManager& display);
-    void init(const char* hostname, const char* password);
+    bool init(const char* hostname, const char* password);
     bool isInitialized() const { return _initialized; }
     void handle();
 

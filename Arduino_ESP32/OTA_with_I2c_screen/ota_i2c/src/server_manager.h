@@ -10,7 +10,7 @@ class ServerManager
 {
 public:
     ServerManager(DisplayManager& display, StepperManager& stepper);
-    void init();
+    bool init();
     bool isInitialized() const { return _initialized; }
     void handleClient();
     void handleText(AsyncWebServerRequest *request);

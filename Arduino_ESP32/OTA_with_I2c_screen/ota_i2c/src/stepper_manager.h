@@ -8,7 +8,7 @@ class StepperManager
 {
 public:
     StepperManager(DisplayManager& display);
-    void begin();
+    bool init();
     void moveTo(long position);
     void run();
     void stop();

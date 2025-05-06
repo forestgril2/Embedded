@@ -33,7 +33,7 @@ void displayFinalConnectionInfo()
     display.displayLines({"WiFi Connected!",
                           ip,
                           "OTA: esp32-blinker",
-                          "Commit:" + String(FIRMWARE_GIT_COMMIT_HASH)});
+                          "Hash: " + String(FIRMWARE_GIT_COMMIT_HASH)});
   #else
     display.displayLines({"WiFi Connected!",
                           ip,
@@ -46,11 +46,11 @@ void setup()
   Serial.begin(115200);
   led.begin();
   
-  display.init();
-  if (!display.isInitialized()) 
+  if (!display.init())
     ESP.restart();
 
-  stepperMotor.begin();
+  if (!stepperMotor.init())
+    onFailure("Stepper Init Failed");
 
   WiFiManager wm;
   display.displayLines({"WiFi Setup Mode", "Connect to:", "ESP32-Setup"});
@@ -58,14 +58,12 @@ void setup()
   if (!wm.autoConnect("ESP32-Setup")) 
     onFailure("WiFi Connect Failed");
 
-  serverManager.init();
-  if (!serverManager.isInitialized()) 
+  if (!serverManager.init())
     onFailure("Server Init Failed");
   
   display.displayLines({"HTTP server started", WiFi.localIP().toString()});
 
-  otaManager.init("esp32-blinker", "haslo123");
-  if (!otaManager.isInitialized()) 
+  if (!otaManager.init("esp32-blinker", "haslo123"))
     onFailure("OTA Init Failed"); 
   Serial.println("OTA Ready");
 

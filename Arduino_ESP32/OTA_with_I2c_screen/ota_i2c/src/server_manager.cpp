@@ -7,41 +7,47 @@
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
     : server(80), ws("/ws"), display(display), stepper(stepper) {}
 
-void ServerManager::init() {
-    // Setup WebSocket
-    ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
-        this->onWebSocketEvent(server, client, type, arg, data, len);
-    });
-    server.addHandler(&ws);
+bool ServerManager::init() {
+    try {
+        // Setup WebSocket
+        ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+            this->onWebSocketEvent(server, client, type, arg, data, len);
+        });
+        server.addHandler(&ws);
 
-    // Setup server routes
-    server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleRoot(request); });
-    
-    server.on("/text", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleText(request); });
-    
-    server.on("/version", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleVersion(request); });
-    
-    server.on("/memory", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleMemoryStatus(request); });
-    
-    server.on("/debug", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleDebug(request); });
+        // Setup server routes
+        server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleRoot(request); });
+        
+        server.on("/text", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleText(request); });
+        
+        server.on("/version", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleVersion(request); });
+        
+        server.on("/memory", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleMemoryStatus(request); });
+        
+        server.on("/debug", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleDebug(request); });
 
-    // Stepper motor control endpoints
-    server.on("/stepper/move", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperMove(request); });
+        // Stepper motor control endpoints
+        server.on("/stepper/move", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperMove(request); });
 
-    server.on("/stepper/stop", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperStop(request); });
+        server.on("/stepper/stop", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperStop(request); });
 
-    server.on("/stepper/speed", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperSpeed(request); });
+        server.on("/stepper/speed", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperSpeed(request); });
 
-    server.on("/stepper/accel", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperAccel(request); });
+        server.on("/stepper/accel", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperAccel(request); });
 
-    server.on("/led/pin", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleLedPinConfig(request); });
+        server.on("/led/pin", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleLedPinConfig(request); });
 
-    server.on("/led/test", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleLedTest(request); });
+        server.on("/led/test", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleLedTest(request); });
 
-    server.on("/wifi/reset", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleWifiReset(request); });
+        server.on("/wifi/reset", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleWifiReset(request); });
 
-    server.begin();
-    _initialized = true;
+        server.begin();
+        _initialized = true;
+        return true;
+    } catch (...) {
+        _initialized = false;
+        return false;
+    }
 }
 
 void ServerManager::handleClient() {

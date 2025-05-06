@@ -4,7 +4,7 @@
 
 StepperManager::StepperManager(DisplayManager& display) : _display(display), _currentSpeed(1000), _currentAcceleration(500) {}
 
-void StepperManager::begin() {
+bool StepperManager::init() {
     pinMode(ENABLE_PIN, OUTPUT);
     digitalWrite(ENABLE_PIN, LOW);  // Enable the stepper driver
     
@@ -24,10 +24,12 @@ void StepperManager::begin() {
         _stepper->setAcceleration(_currentAcceleration);
         
         _display.displayText("Stepper initialized");
+        return true;
     } 
     else 
     {
         _display.displayText("Stepper init failed");
+        return false;
     }
 }
 
