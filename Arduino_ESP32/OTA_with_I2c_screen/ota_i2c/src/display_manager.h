@@ -10,7 +10,7 @@ class DisplayManager
 {
 public:
     DisplayManager(int width, int height, int resetPin = -1);
-    bool begin(uint8_t i2cAddress = 0x3C);
+    bool init(uint8_t i2cAddress = 0x3C);
     bool isInitialized() const { return _initialized; }
     void clear();
     void display();

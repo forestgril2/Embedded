@@ -9,7 +9,7 @@ ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper)
 {
 }
 
-void ServerManager::begin() 
+void ServerManager::init() 
 {
     // Setup server routes
     server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) 

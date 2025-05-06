@@ -5,7 +5,7 @@ OTAManager::OTAManager(DisplayManager& display) : _display(display)
 {
 }
 
-void OTAManager::begin(const char* hostname, const char* password) 
+void OTAManager::init(const char* hostname, const char* password) 
 {
     ArduinoOTA.setHostname(hostname);
     ArduinoOTA.setPassword(password);

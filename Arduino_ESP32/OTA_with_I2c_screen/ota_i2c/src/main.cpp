@@ -25,7 +25,7 @@ void setup()
   led.begin();
   
   // Initialize OLED display
-  display.begin();
+  display.init();
   if (!display.isInitialized()) 
   {
     ESP.restart();
@@ -54,7 +54,7 @@ void setup()
   }
 
   // Initialize server
-  serverManager.begin();
+  serverManager.init();
   if (!serverManager.isInitialized()) 
   {
     display.displayText("Server Init Failed");
@@ -69,7 +69,7 @@ void setup()
   display.displayLines(serverLines);
 
   // Initialize OTA
-  otaManager.begin("esp32-blinker", "haslo123");
+  otaManager.init("esp32-blinker", "haslo123");
   if (!otaManager.isInitialized()) 
   {
     display.displayText("OTA Init Failed");
