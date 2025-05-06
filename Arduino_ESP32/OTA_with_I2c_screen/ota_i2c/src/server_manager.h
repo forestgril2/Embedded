@@ -30,6 +30,14 @@ private:
     DisplayManager& display;
     StepperManager& stepper;
     bool _initialized = false;
+
+    // HTML generation methods
+    String generateHeader();
+    String generateTextDisplayForm();
+    String generateStepperControlForms();
+    String generateLedControlForms();
+    String generateWifiControlForm();
+    String generateFooter();
 };
 
 #endif // SERVER_MANAGER_H 

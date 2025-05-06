@@ -50,58 +50,12 @@ void ServerManager::handleText(AsyncWebServerRequest *request) {
 }
 
 void ServerManager::handleRoot(AsyncWebServerRequest *request) {
-    String html = "<html><body>";
-    html += "<h1>ESP32 Stepper Motor Control</h1>";
-    html += "<p>Current Position: " + String(stepper.getCurrentPosition()) + " steps</p>";
-    html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
-    if (stepper.isRunning()) {
-        html += "<p style='color: blue;'>Motor is moving...</p>";
-    } else {
-        html += "<p style='color: green;'>Motor is stopped</p>";
-    }
-    html += "<form action=\"/text\" method=\"POST\">";
-    html += "Text to display: <input name=\"text\" type=\"text\">";
-    html += "<input type=\"submit\" value=\"Display\">";
-    html += "</form>";
-    html += "<h2>Stepper Motor Control</h2>";
-    html += "<form action=\"/stepper/move\" method=\"POST\">";
-    html += "Target Position: <input name=\"position\" type=\"number\" value=\"" + String(stepper.getCurrentPosition()) + "\">";
-    html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) + 800\">+1 Rev</button>";
-    html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) - 800\">-1 Rev</button>";
-    html += "<input type=\"submit\" value=\"Move\">";
-    html += "</form>";
-    html += "<form action=\"/stepper/speed\" method=\"POST\">";
-    html += "Speed (steps/sec): <input name=\"speed\" type=\"number\" value=\"" + String(stepper.getCurrentSpeed()) + "\">";
-    html += "<input type=\"submit\" value=\"Set Speed\">";
-    html += "</form>";
-    html += "<form action=\"/stepper/accel\" method=\"POST\">";
-    html += "Acceleration (steps/sec²): <input name=\"accel\" type=\"number\" value=\"" + String(stepper.getCurrentAcceleration()) + "\">";
-    html += "<input type=\"submit\" value=\"Set Acceleration\">";
-    html += "</form>";
-    html += "<form action=\"/stepper/stop\" method=\"POST\">";
-    html += "<input type=\"submit\" value=\"Stop Motor\">";
-    html += "</form>";
-    
-    // Add LED configuration section
-    html += "<h2>LED Configuration</h2>";
-    html += "<form action=\"/led/pin\" method=\"POST\">";
-    html += "LED Pin (1-39): <input name=\"pin\" type=\"number\" min=\"1\" max=\"39\" value=\"" + String(LedControl::getLedPin()) + "\">";
-    html += "<input type=\"submit\" value=\"Update LED Pin\">";
-    html += "</form>";
-    
-    // Add LED test button
-    html += "<h2>LED Test</h2>";
-    html += "<form action=\"/led/test\" method=\"GET\">";
-    html += "<input type=\"submit\" value=\"Test LED\">";
-    html += "</form>";
-    
-    // Add WiFi reset button
-    html += "<h2>WiFi Configuration</h2>";
-    html += "<form action=\"/wifi/reset\" method=\"GET\">";
-    html += "<input type=\"submit\" value=\"Reset WiFi\" style=\"color: red;\">";
-    html += "</form>";
-    
-    html += "</body></html>";
+    String html = generateHeader();
+    html += generateTextDisplayForm();
+    html += generateStepperControlForms();
+    html += generateLedControlForms();
+    html += generateWifiControlForm();
+    html += generateFooter();
     request->send(200, "text/html", html);
 }
 
@@ -203,4 +157,83 @@ void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
     delay(1000);  // Give time for response to be sent
     WiFi.disconnect(true);
     ESP.restart();
+}
+
+String ServerManager::generateHeader() {
+    String html = "<html><body>";
+    html += "<h1>ESP32 Stepper Motor Control</h1>";
+    html += "<p>Current Position: " + String(stepper.getCurrentPosition()) + " steps</p>";
+    html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
+    if (stepper.isRunning()) {
+        html += "<p style='color: blue;'>Motor is moving...</p>";
+    } else {
+        html += "<p style='color: green;'>Motor is stopped</p>";
+    }
+    return html;
+}
+
+String ServerManager::generateTextDisplayForm() {
+    String html = "<form action=\"/text\" method=\"POST\">";
+    html += "Text to display: <input name=\"text\" type=\"text\">";
+    html += "<input type=\"submit\" value=\"Display\">";
+    html += "</form>";
+    return html;
+}
+
+String ServerManager::generateStepperControlForms() {
+    String html = "<h2>Stepper Motor Control</h2>";
+    
+    // Move form
+    html += "<form action=\"/stepper/move\" method=\"POST\">";
+    html += "Target Position: <input name=\"position\" type=\"number\" value=\"" + String(stepper.getCurrentPosition()) + "\">";
+    html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) + 800\">+1 Rev</button>";
+    html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) - 800\">-1 Rev</button>";
+    html += "<input type=\"submit\" value=\"Move\">";
+    html += "</form>";
+
+    // Speed form
+    html += "<form action=\"/stepper/speed\" method=\"POST\">";
+    html += "Speed (steps/sec): <input name=\"speed\" type=\"number\" value=\"" + String(stepper.getCurrentSpeed()) + "\">";
+    html += "<input type=\"submit\" value=\"Set Speed\">";
+    html += "</form>";
+
+    // Acceleration form
+    html += "<form action=\"/stepper/accel\" method=\"POST\">";
+    html += "Acceleration (steps/sec²): <input name=\"accel\" type=\"number\" value=\"" + String(stepper.getCurrentAcceleration()) + "\">";
+    html += "<input type=\"submit\" value=\"Set Acceleration\">";
+    html += "</form>";
+
+    // Stop form
+    html += "<form action=\"/stepper/stop\" method=\"POST\">";
+    html += "<input type=\"submit\" value=\"Stop Motor\">";
+    html += "</form>";
+
+    return html;
+}
+
+String ServerManager::generateLedControlForms() {
+    String html = "<h2>LED Configuration</h2>";
+    html += "<form action=\"/led/pin\" method=\"POST\">";
+    html += "LED Pin (1-39): <input name=\"pin\" type=\"number\" min=\"1\" max=\"39\" value=\"" + String(LedControl::getLedPin()) + "\">";
+    html += "<input type=\"submit\" value=\"Update LED Pin\">";
+    html += "</form>";
+    
+    html += "<h2>LED Test</h2>";
+    html += "<form action=\"/led/test\" method=\"GET\">";
+    html += "<input type=\"submit\" value=\"Test LED\">";
+    html += "</form>";
+    
+    return html;
+}
+
+String ServerManager::generateWifiControlForm() {
+    String html = "<h2>WiFi Configuration</h2>";
+    html += "<form action=\"/wifi/reset\" method=\"GET\">";
+    html += "<input type=\"submit\" value=\"Reset WiFi\" style=\"color: red;\">";
+    html += "</form>";
+    return html;
+}
+
+String ServerManager::generateFooter() {
+    return "</body></html>";
 } 
