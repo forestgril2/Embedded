@@ -23,14 +23,6 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   setLedOff(ledPin);  // Ensure LED starts OFF
   
-  // Test LED functionality
-  for(int i = 0; i < 3; i++) {
-    setLedOn(ledPin);
-    delay(200);
-    setLedOff(ledPin);
-    delay(200);
-  }
-
   // Initialize OLED display
   if (!display.begin()) {
     Serial.println(F("SSD1306 allocation failed"));
