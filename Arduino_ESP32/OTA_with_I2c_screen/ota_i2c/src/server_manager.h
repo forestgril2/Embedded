@@ -37,7 +37,12 @@ private:
     StepperManager& stepper;
     bool _initialized = false;
     unsigned long _lastStatusUpdate = 0;
-    const unsigned long STATUS_UPDATE_INTERVAL = 1000; // Update every second
+    const unsigned long STATUS_UPDATE_INTERVAL = 250; // Update every 250ms
+    
+    // Speed calculation variables
+    long _lastPosition = 0;
+    unsigned long _lastPositionTime = 0;
+    float _calculatedSpeed = 0.0f;
 
     // HTML generation methods
     String generateHeader();

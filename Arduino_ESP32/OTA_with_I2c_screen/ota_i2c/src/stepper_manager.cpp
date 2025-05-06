@@ -87,7 +87,25 @@ long StepperManager::getCurrentPosition()
 
 float StepperManager::getCurrentSpeed() 
 {
-    return _currentSpeed;
+    if (!_stepper) return 0.0f;
+
+    // Get current position and time
+    long currentPosition = _stepper->getCurrentPosition();
+    unsigned long currentTime = millis();
+    
+    // Calculate speed if we have previous position data
+    if (_lastPositionTime > 0) {
+        float timeDelta = (currentTime - _lastPositionTime) / 1000.0f; // Convert to seconds
+        if (timeDelta > 0) {
+            _calculatedSpeed = (currentPosition - _lastPosition) / timeDelta; // steps per second
+        }
+    }
+    
+    // Update last position and time
+    _lastPosition = currentPosition;
+    _lastPositionTime = currentTime;
+    
+    return _calculatedSpeed;
 }
 
 float StepperManager::getCurrentAcceleration() 

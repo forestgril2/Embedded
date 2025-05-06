@@ -210,15 +210,22 @@ void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
 String ServerManager::generateHeader() {
     String html = "<html><head>";
     html += "<title>ESP32 Stepper Motor Control</title>";
+    html += "<style>";
+    html += "  .status-value { font-weight: bold; }";
+    html += "  .speed-value { color: #0066cc; }";
+    html += "  .status-running { color: blue; }";
+    html += "  .status-stopped { color: green; }";
+    html += "</style>";
     html += "<script>";
     html += "let ws = new WebSocket('ws://' + window.location.hostname + '/ws');";
     html += "ws.onmessage = function(event) {";
     html += "  const data = JSON.parse(event.data);";
     html += "  document.getElementById('position').textContent = data.position;";
-    html += "  document.getElementById('speed').textContent = data.speed;";
-    html += "  document.getElementById('accel').textContent = data.acceleration;";
-    html += "  document.getElementById('status').textContent = data.isRunning ? 'Running' : 'Stopped';";
-    html += "  document.getElementById('status').style.color = data.isRunning ? 'blue' : 'green';";
+    html += "  document.getElementById('speed').textContent = data.speed.toFixed(1);";
+    html += "  document.getElementById('accel').textContent = data.acceleration.toFixed(1);";
+    html += "  const statusElem = document.getElementById('status');";
+    html += "  statusElem.textContent = data.isRunning ? 'Running' : 'Stopped';";
+    html += "  statusElem.className = data.isRunning ? 'status-running' : 'status-stopped';";
     html += "  document.getElementById('uptime').textContent = data.uptime;";
     html += "  document.getElementById('rssi').textContent = data.rssi;";
     html += "  document.getElementById('heap').textContent = data.freeHeap;";
@@ -226,12 +233,20 @@ String ServerManager::generateHeader() {
     html += "</script>";
     html += "</head><body>";
     html += "<h1>ESP32 Stepper Motor Control</h1>";
-    html += "<p>Current Position: <span id='position'>" + String(stepper.getCurrentPosition()) + "</span> steps</p>";
+    html += "<div style='margin-bottom: 20px;'>";
+    html += "<h2>Current Status</h2>";
+    html += "<p>Position: <span id='position' class='status-value'>" + String(stepper.getCurrentPosition()) + "</span> steps</p>";
+    html += "<p>Current Speed: <span id='speed' class='speed-value'>" + String(stepper.getCurrentSpeed(), 1) + "</span> steps/sec</p>";
+    html += "<p>Acceleration: <span id='accel' class='status-value'>" + String(stepper.getCurrentAcceleration(), 1) + "</span> steps/sec²</p>";
     html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
-    html += "<p>Status: <span id='status' style='color: " + String(stepper.isRunning() ? "blue" : "green") + ";'>" + String(stepper.isRunning() ? "Running" : "Stopped") + "</span></p>";
+    html += "<p>Status: <span id='status' class='" + String(stepper.isRunning() ? "status-running" : "status-stopped") + "'>" + String(stepper.isRunning() ? "Running" : "Stopped") + "</span></p>";
+    html += "</div>";
+    html += "<div style='margin-bottom: 20px;'>";
+    html += "<h2>System Info</h2>";
     html += "<p>Uptime: <span id='uptime'>0</span> seconds</p>";
     html += "<p>WiFi Signal: <span id='rssi'>0</span> dBm</p>";
     html += "<p>Free Heap: <span id='heap'>0</span> bytes</p>";
+    html += "</div>";
     return html;
 }
 

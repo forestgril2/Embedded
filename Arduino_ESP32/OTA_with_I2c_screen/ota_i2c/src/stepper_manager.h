@@ -28,8 +28,13 @@ private:
     static const int DIR_PIN = 14;     // GPIO14 for direction signal
     static const int ENABLE_PIN = 12;  // GPIO12 for enable signal
     static const int MICROSTEPS = 4;   // 1/4 microstepping (800 steps/rev)
-    float _currentSpeed;               // Track current speed
-    float _currentAcceleration;        // Track current acceleration
+    float _currentSpeed;               // Target speed
+    float _currentAcceleration;        // Current acceleration
+    
+    // Speed calculation variables
+    long _lastPosition = 0;
+    unsigned long _lastPositionTime = 0;
+    float _calculatedSpeed = 0.0f;
 };
 
 #endif // STEPPER_MANAGER_H 
