@@ -1,10 +1,7 @@
 #include "display_manager.h"
 #include <Wire.h>
 
-DisplayManager::DisplayManager(int width, int height, int resetPin) 
-    : _display(width, height, &Wire, resetPin) 
-{
-}
+DisplayManager::DisplayManager(int width, int height, int resetPin) : _display(width, height, &Wire, resetPin) {}
 
 bool DisplayManager::begin(uint8_t i2cAddress) 
 {
@@ -18,21 +15,11 @@ bool DisplayManager::begin(uint8_t i2cAddress)
     return true;
 }
 
-void DisplayManager::_setupDisplay() 
-{
-    _display.clearDisplay();
-    _display.display();
-}
+void DisplayManager::_setupDisplay() { _display.clearDisplay(); _display.display(); }
 
-void DisplayManager::clear() 
-{
-    _display.clearDisplay();
-}
+void DisplayManager::clear() { _display.clearDisplay(); }
 
-void DisplayManager::display() 
-{
-    _display.display();
-}
+void DisplayManager::display() { _display.display(); }
 
 void DisplayManager::_setupTextDisplay() 
 {

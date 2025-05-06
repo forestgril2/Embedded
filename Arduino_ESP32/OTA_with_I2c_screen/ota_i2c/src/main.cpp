@@ -27,9 +27,7 @@ void setup()
   // Initialize OLED display
   display.init();
   if (!display.isInitialized()) 
-  {
     ESP.restart();
-  }
 
   // Initialize stepper motor
   stepper.begin();

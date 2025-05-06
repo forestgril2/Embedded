@@ -2,13 +2,9 @@
 #include <FastAccelStepper.h>
 #include <Arduino.h>
 
-StepperManager::StepperManager(DisplayManager& display)
-    : _display(display), _currentSpeed(1000), _currentAcceleration(500) 
-{
-}
+StepperManager::StepperManager(DisplayManager& display) : _display(display), _currentSpeed(1000), _currentAcceleration(500) {}
 
-void StepperManager::begin() 
-{
+void StepperManager::begin() {
     pinMode(ENABLE_PIN, OUTPUT);
     digitalWrite(ENABLE_PIN, LOW);  // Enable the stepper driver
     
@@ -43,10 +39,7 @@ void StepperManager::moveTo(long position)
     }
 }
 
-void StepperManager::run() 
-{
-    // FastAccelStepper handles running automatically
-}
+void StepperManager::run() { /* FastAccelStepper handles running automatically */ }
 
 void StepperManager::stop() 
 {
