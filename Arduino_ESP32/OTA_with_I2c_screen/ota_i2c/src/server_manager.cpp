@@ -2,6 +2,7 @@
 #include <ESP.h>
 #include "git_version.h"
 #include "config.h"
+#include "led_control.h"
 
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
     : server(80), display(display), stepper(stepper) {
@@ -111,7 +112,7 @@ void ServerManager::handleRoot(AsyncWebServerRequest *request) {
     // Add LED configuration section
     html += "<h2>LED Configuration</h2>";
     html += "<form action=\"/led/pin\" method=\"POST\">";
-    html += "LED Pin (1-39): <input name=\"pin\" type=\"number\" min=\"1\" max=\"39\" value=\"" + String(getLedPin()) + "\">";
+    html += "LED Pin (1-39): <input name=\"pin\" type=\"number\" min=\"1\" max=\"39\" value=\"" + String(LedControl::getLedPin()) + "\">";
     html += "<input type=\"submit\" value=\"Update LED Pin\">";
     html += "</form>";
     
@@ -205,7 +206,7 @@ void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) {
     if (request->hasParam("pin", true)) {
         int newPin = request->getParam("pin", true)->value().toInt();
         if (newPin > 0 && newPin < 40) {  // Validate pin number
-            saveLedPin(newPin);
+            LedControl::saveLedPin(newPin);
             request->redirect("/");  // Redirect to home page after successful update
         } else {
             request->send(400, "text/plain", "Invalid pin number. Must be between 1 and 39.");
@@ -216,14 +217,10 @@ void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) {
 }
 
 void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
-    int ledPin = getLedPin();
-    // Blink LED 3 times
-    for(int i = 0; i < 3; i++) {
-        setLedOn(ledPin);
-        delay(200);
-        setLedOff(ledPin);
-        delay(200);
-    }
+    int ledPin = LedControl::getLedPin();
+    LedControl led(ledPin);
+    led.begin();
+    led.blink(3, 200);  // Blink 3 times with 200ms delay
     request->send(200, "text/plain", "LED test completed on pin " + String(ledPin));
 }
 
