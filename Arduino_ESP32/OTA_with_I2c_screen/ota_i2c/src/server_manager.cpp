@@ -4,9 +4,16 @@
 #include "config.h"
 #include "led_control.h"
 
-ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) : server(80), display(display), stepper(stepper) {}
+ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
+    : server(80), ws("/ws"), display(display), stepper(stepper) {}
 
 void ServerManager::init() {
+    // Setup WebSocket
+    ws.onEvent([this](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+        this->onWebSocketEvent(server, client, type, arg, data, len);
+    });
+    server.addHandler(&ws);
+
     // Setup server routes
     server.on("/", HTTP_GET, [this](AsyncWebServerRequest *request) { this->handleRoot(request); });
     
@@ -37,7 +44,48 @@ void ServerManager::init() {
     _initialized = true;
 }
 
-void ServerManager::handleClient() { /* AsyncWebServer handles clients automatically */ }
+void ServerManager::handleClient() {
+    // Broadcast status updates periodically
+    unsigned long currentMillis = millis();
+    if (currentMillis - _lastStatusUpdate >= STATUS_UPDATE_INTERVAL) {
+        broadcastStatus();
+        _lastStatusUpdate = currentMillis;
+    }
+}
+
+void ServerManager::broadcastStatus() {
+    if (ws.count() == 0) return; // No clients connected
+
+    StaticJsonDocument<512> doc;
+    doc["position"] = stepper.getCurrentPosition();
+    doc["speed"] = stepper.getCurrentSpeed();
+    doc["acceleration"] = stepper.getCurrentAcceleration();
+    doc["isRunning"] = stepper.isRunning();
+    doc["uptime"] = millis() / 1000;
+    doc["rssi"] = WiFi.RSSI();
+    doc["freeHeap"] = ESP.getFreeHeap();
+
+    String jsonString;
+    serializeJson(doc, jsonString);
+    ws.textAll(jsonString);
+}
+
+void ServerManager::onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+    switch (type) {
+        case WS_EVT_CONNECT:
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            break;
+        case WS_EVT_DISCONNECT:
+            Serial.printf("WebSocket client #%u disconnected\n", client->id());
+            break;
+        case WS_EVT_DATA:
+            // Handle incoming WebSocket data if needed
+            break;
+        case WS_EVT_PONG:
+        case WS_EVT_ERROR:
+            break;
+    }
+}
 
 void ServerManager::handleText(AsyncWebServerRequest *request) {
     if (request->hasParam("text", true)) {
@@ -160,15 +208,30 @@ void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
 }
 
 String ServerManager::generateHeader() {
-    String html = "<html><body>";
+    String html = "<html><head>";
+    html += "<title>ESP32 Stepper Motor Control</title>";
+    html += "<script>";
+    html += "let ws = new WebSocket('ws://' + window.location.hostname + '/ws');";
+    html += "ws.onmessage = function(event) {";
+    html += "  const data = JSON.parse(event.data);";
+    html += "  document.getElementById('position').textContent = data.position;";
+    html += "  document.getElementById('speed').textContent = data.speed;";
+    html += "  document.getElementById('accel').textContent = data.acceleration;";
+    html += "  document.getElementById('status').textContent = data.isRunning ? 'Running' : 'Stopped';";
+    html += "  document.getElementById('status').style.color = data.isRunning ? 'blue' : 'green';";
+    html += "  document.getElementById('uptime').textContent = data.uptime;";
+    html += "  document.getElementById('rssi').textContent = data.rssi;";
+    html += "  document.getElementById('heap').textContent = data.freeHeap;";
+    html += "};";
+    html += "</script>";
+    html += "</head><body>";
     html += "<h1>ESP32 Stepper Motor Control</h1>";
-    html += "<p>Current Position: " + String(stepper.getCurrentPosition()) + " steps</p>";
+    html += "<p>Current Position: <span id='position'>" + String(stepper.getCurrentPosition()) + "</span> steps</p>";
     html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
-    if (stepper.isRunning()) {
-        html += "<p style='color: blue;'>Motor is moving...</p>";
-    } else {
-        html += "<p style='color: green;'>Motor is stopped</p>";
-    }
+    html += "<p>Status: <span id='status' style='color: " + String(stepper.isRunning() ? "blue" : "green") + ";'>" + String(stepper.isRunning() ? "Running" : "Stopped") + "</span></p>";
+    html += "<p>Uptime: <span id='uptime'>0</span> seconds</p>";
+    html += "<p>WiFi Signal: <span id='rssi'>0</span> dBm</p>";
+    html += "<p>Free Heap: <span id='heap'>0</span> bytes</p>";
     return html;
 }
 

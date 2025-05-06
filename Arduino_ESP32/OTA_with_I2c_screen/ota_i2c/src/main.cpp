@@ -81,14 +81,12 @@ void setup()
   }
   Serial.println("OTA Ready");
 
-  // Display final connection info
-
+  displayFinalConnectionInfo();
 }
 
 void loop() 
 {
   otaManager.handle();
   serverManager.handleClient();
-  stepperMotor.run();  // Update stepper motor position
+  stepperMotor.run();
 } 
-

@@ -2,6 +2,7 @@
 #define SERVER_MANAGER_H
 
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 #include "display_manager.h"
 #include "stepper_manager.h"
 
@@ -24,12 +25,19 @@ public:
     void handleLedTest(AsyncWebServerRequest *request);
     void handleLedPinConfig(AsyncWebServerRequest *request);
     void handleWifiReset(AsyncWebServerRequest *request);
+    
+    // WebSocket methods
+    void broadcastStatus();
+    void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
 private:
     AsyncWebServer server;
+    AsyncWebSocket ws;
     DisplayManager& display;
     StepperManager& stepper;
     bool _initialized = false;
+    unsigned long _lastStatusUpdate = 0;
+    const unsigned long STATUS_UPDATE_INTERVAL = 1000; // Update every second
 
     // HTML generation methods
     String generateHeader();
