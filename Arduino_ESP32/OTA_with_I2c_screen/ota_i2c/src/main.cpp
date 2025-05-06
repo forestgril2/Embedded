@@ -46,7 +46,6 @@ void setup()
   Serial.begin(115200);
   led.begin();
   
-  // Initialize OLED display
   display.init();
   if (!display.isInitialized()) 
     ESP.restart();
@@ -57,28 +56,17 @@ void setup()
   display.displayLines({"WiFi Setup Mode", "Connect to:", "ESP32-Setup"});
 
   if (!wm.autoConnect("ESP32-Setup")) 
-  {
     onFailure("WiFi Connect Failed");
-  }
 
-  // Initialize server
   serverManager.init();
   if (!serverManager.isInitialized()) 
-  {
     onFailure("Server Init Failed");
-  }
   
-  std::vector<String> serverLines = {
-    "HTTP server started",
-    WiFi.localIP().toString()
-  };
-  display.displayLines(serverLines);
+  display.displayLines({"HTTP server started", WiFi.localIP().toString()});
 
   otaManager.init("esp32-blinker", "haslo123");
   if (!otaManager.isInitialized()) 
-  {
     onFailure("OTA Init Failed"); 
-  }
   Serial.println("OTA Ready");
 
   displayFinalConnectionInfo();
