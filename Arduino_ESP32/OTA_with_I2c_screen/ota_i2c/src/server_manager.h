@@ -10,6 +10,17 @@
 class ServerManager 
 {
 public:
+    // TODO: Pin configuration should be loaded at startup, not when visiting root path
+    // TODO: Error messages should be shown on the web interface, not just the display
+    // TODO: Add validation feedback on the web interface
+    // TODO: Consider adding a separate endpoint for pin validation
+    // TODO: Add method to check if pin changes require restart
+    // TODO: Consider adding a warning when changing I2C pins
+    // TODO: Add method to show current pin configuration status
+    // TODO: Consider adding a way to reset to defaults from web interface
+    // TODO: Add method to check if current config is valid before saving
+    // TODO: Consider adding a way to backup/restore pin configuration
+
     ServerManager(DisplayManager& display, StepperManager& stepper, PinManager& pinManager);
     bool init();
     bool isInitialized() const { return _initialized; }
