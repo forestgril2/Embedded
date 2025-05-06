@@ -6,8 +6,8 @@
 #include "memory_manager.h"
 #include "pin_manager.h"
 
-ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper) 
-    : server(80), ws("/ws"), display(display), stepper(stepper) {}
+ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper, PinManager& pinManager) 
+    : server(80), ws("/ws"), display(display), stepper(stepper), pinManager(pinManager) {}
 
 bool ServerManager::init() {
     try {
@@ -209,44 +209,44 @@ void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
 }
 
 void ServerManager::handlePinConfig(AsyncWebServerRequest *request) {
-    if (request->hasParam("stepperStepPin", true) &&
-        request->hasParam("stepperDirPin", true) &&
-        request->hasParam("stepperEnablePin", true) &&
-        request->hasParam("displaySdaPin", true) &&
-        request->hasParam("displaySclPin", true) &&
-        request->hasParam("displayResetPin", true) &&
-        request->hasParam("ledPin", true)) {
-        
-        PinManager::PinConfig config;
-        config.stepperStepPin = request->getParam("stepperStepPin", true)->value().toInt();
-        config.stepperDirPin = request->getParam("stepperDirPin", true)->value().toInt();
-        config.stepperEnablePin = request->getParam("stepperEnablePin", true)->value().toInt();
-        config.displaySdaPin = request->getParam("displaySdaPin", true)->value().toInt();
-        config.displaySclPin = request->getParam("displaySclPin", true)->value().toInt();
-        config.displayResetPin = request->getParam("displayResetPin", true)->value().toInt();
-        config.ledPin = request->getParam("ledPin", true)->value().toInt();
-
-        // Validate all pins
-        if (!PinManager::validatePin(config.stepperStepPin) ||
-            !PinManager::validatePin(config.stepperDirPin) ||
-            !PinManager::validatePin(config.stepperEnablePin) ||
-            !PinManager::validatePin(config.displaySdaPin) ||
-            !PinManager::validatePin(config.displaySclPin) ||
-            !PinManager::validatePin(config.displayResetPin) ||
-            !PinManager::validatePin(config.ledPin)) {
-            request->send(400, "text/plain", "Invalid pin number. Must be between 0 and 39.");
-            return;
-        }
-
-        PinManager::saveConfig(config);
-        request->send(200, "text/plain", "Pin configuration saved. Please restart the device for changes to take effect.");
-    } else {
-        request->send(400, "text/plain", "Missing required parameters");
+    if (!request->hasParam("stepperStepPin", true) ||
+        !request->hasParam("stepperDirPin", true) ||
+        !request->hasParam("stepperEnablePin", true) ||
+        !request->hasParam("displaySdaPin", true) ||
+        !request->hasParam("displaySclPin", true) ||
+        !request->hasParam("displayResetPin", true) ||
+        !request->hasParam("ledPin", true)) {
+        request->send(400, "text/plain", "Missing parameters");
+        return;
     }
+
+    PinManager::PinConfig config;
+    config.stepperStepPin = request->getParam("stepperStepPin", true)->value().toInt();
+    config.stepperDirPin = request->getParam("stepperDirPin", true)->value().toInt();
+    config.stepperEnablePin = request->getParam("stepperEnablePin", true)->value().toInt();
+    config.displaySdaPin = request->getParam("displaySdaPin", true)->value().toInt();
+    config.displaySclPin = request->getParam("displaySclPin", true)->value().toInt();
+    config.displayResetPin = request->getParam("displayResetPin", true)->value().toInt();
+    config.ledPin = request->getParam("ledPin", true)->value().toInt();
+
+    // Validate pins
+    if (!PinManager::validatePin(config.stepperStepPin) ||
+        !PinManager::validatePin(config.stepperDirPin) ||
+        !PinManager::validatePin(config.stepperEnablePin) ||
+        !PinManager::validatePin(config.displaySdaPin) ||
+        !PinManager::validatePin(config.displaySclPin) ||
+        !PinManager::validatePin(config.displayResetPin) ||
+        !PinManager::validatePin(config.ledPin)) {
+        request->send(400, "text/plain", "Invalid pin numbers");
+        return;
+    }
+
+    pinManager.saveConfig(config);
+    request->send(200, "text/plain", "Configuration saved");
 }
 
 void ServerManager::handlePinConfigGet(AsyncWebServerRequest *request) {
-    request->send(200, "application/json", PinManager::getConfigJson());
+    request->send(200, "application/json", pinManager.getConfigJson());
 }
 
 String ServerManager::generateHeader() {
@@ -347,45 +347,18 @@ String ServerManager::generateLedControlForms() {
 }
 
 String ServerManager::generatePinConfigForm() {
-    PinManager::PinConfig config = PinManager::loadConfig();
+    PinManager::PinConfig config = pinManager.loadConfig();
     String html = "<h2>Pin Configuration</h2>";
-    html += "<form action=\"/pins\" method=\"POST\">";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>Stepper Step Pin: <input name=\"stepperStepPin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.stepperStepPin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>Stepper Direction Pin: <input name=\"stepperDirPin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.stepperDirPin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>Stepper Enable Pin: <input name=\"stepperEnablePin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.stepperEnablePin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>Display SDA Pin: <input name=\"displaySdaPin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.displaySdaPin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>Display SCL Pin: <input name=\"displaySclPin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.displaySclPin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>Display Reset Pin: <input name=\"displayResetPin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.displayResetPin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<div style='margin-bottom: 10px;'>";
-    html += "<label>LED Pin: <input name=\"ledPin\" type=\"number\" min=\"0\" max=\"39\" value=\"" + String(config.ledPin) + "\"></label>";
-    html += "</div>";
-    
-    html += "<input type=\"submit\" value=\"Save Pin Configuration\">";
+    html += "<form action='/pin-config' method='POST'>";
+    html += "<label>Stepper Step Pin: <input type='number' name='stepperStepPin' value='" + String(config.stepperStepPin) + "'></label><br>";
+    html += "<label>Stepper Direction Pin: <input type='number' name='stepperDirPin' value='" + String(config.stepperDirPin) + "'></label><br>";
+    html += "<label>Stepper Enable Pin: <input type='number' name='stepperEnablePin' value='" + String(config.stepperEnablePin) + "'></label><br>";
+    html += "<label>Display SDA Pin: <input type='number' name='displaySdaPin' value='" + String(config.displaySdaPin) + "'></label><br>";
+    html += "<label>Display SCL Pin: <input type='number' name='displaySclPin' value='" + String(config.displaySclPin) + "'></label><br>";
+    html += "<label>Display Reset Pin: <input type='number' name='displayResetPin' value='" + String(config.displayResetPin) + "'></label><br>";
+    html += "<label>LED Pin: <input type='number' name='ledPin' value='" + String(config.ledPin) + "'></label><br>";
+    html += "<input type='submit' value='Save Configuration'>";
     html += "</form>";
-    
-    html += "<div style='margin-top: 20px;'>";
-    html += "<p><strong>Note:</strong> Changes will take effect after restart.</p>";
-    html += "</div>";
-    
     return html;
 }
 

@@ -8,14 +8,16 @@
 #include "led_control.h"
 #include "git_version.h"
 #include "config.h"
+#include "pin_manager.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 
 DisplayManager display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_RESET);
+PinManager pinManager(display);
 StepperManager stepperMotor(display);
-ServerManager serverManager(display, stepperMotor);
+ServerManager serverManager(display, stepperMotor, pinManager);
 OTAManager otaManager(display);
 LedControl led(LedControl::getLedPin());
 
@@ -48,6 +50,9 @@ void setup()
   
   if (!display.init())
     ESP.restart();
+
+  if (!pinManager.init())
+    onFailure("Pin Manager Init Failed");
 
   if (!stepperMotor.init())
     onFailure("Stepper Init Failed");

@@ -1,9 +1,9 @@
-#ifndef PIN_MANAGER_H
-#define PIN_MANAGER_H
+#pragma once
 
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <ArduinoJson.h>
+#include "display_manager.h"
 
 class PinManager {
 public:
@@ -17,17 +17,19 @@ public:
         int8_t ledPin;
     };
 
-    static bool init();
-    static void saveConfig(const PinConfig& config);
-    static PinConfig loadConfig();
-    static String getConfigJson();
-    static bool validatePin(int8_t pin);
-    static void setDefaultConfig();
-
-private:
     static const int EEPROM_SIZE = 512;
     static const int CONFIG_ADDRESS = 0;
-    static const uint32_t CONFIG_VERSION = 1;  // For future config structure changes
-};
+    static const uint32_t CONFIG_VERSION = 1;
+    static const PinConfig DEFAULT_CONFIG;
 
-#endif // PIN_MANAGER_H 
+    PinManager(DisplayManager& display) : display(display) {}
+    bool init();
+    void saveConfig(const PinConfig& config);
+    PinConfig loadConfig();
+    String getConfigJson();
+    static bool validatePin(int8_t pin);
+    void setDefaultConfig();
+
+private:
+    DisplayManager& display;
+}; 

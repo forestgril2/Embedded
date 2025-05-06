@@ -10,7 +10,7 @@
 class ServerManager 
 {
 public:
-    ServerManager(DisplayManager& display, StepperManager& stepper);
+    ServerManager(DisplayManager& display, StepperManager& stepper, PinManager& pinManager);
     bool init();
     bool isInitialized() const { return _initialized; }
     void handleClient();
@@ -38,6 +38,7 @@ private:
     AsyncWebSocket ws;
     DisplayManager& display;
     StepperManager& stepper;
+    PinManager& pinManager;
     bool _initialized = false;
     unsigned long _lastStatusUpdate = 0;
     const unsigned long STATUS_UPDATE_INTERVAL = 250; // Update every 250ms

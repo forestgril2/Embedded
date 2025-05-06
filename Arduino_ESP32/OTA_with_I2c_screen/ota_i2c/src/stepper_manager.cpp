@@ -2,7 +2,11 @@
 #include <FastAccelStepper.h>
 #include <Arduino.h>
 
-StepperManager::StepperManager(DisplayManager& display) : _display(display), _currentSpeed(1000), _currentAcceleration(500) {}
+StepperManager::StepperManager(DisplayManager& display) :
+    _display(display),
+    _currentSpeed(6400), 
+    _currentAcceleration(30000) 
+{}
 
 bool StepperManager::init() {
     pinMode(ENABLE_PIN, OUTPUT);
