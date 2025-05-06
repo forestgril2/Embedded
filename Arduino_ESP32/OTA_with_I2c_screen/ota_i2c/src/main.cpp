@@ -14,10 +14,32 @@
 #define OLED_RESET -1
 
 DisplayManager display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_RESET);
-StepperManager stepper(display);
-ServerManager serverManager(display, stepper);
+StepperManager stepperMotor(display);
+ServerManager serverManager(display, stepperMotor);
 OTAManager otaManager(display);
 LedControl led(LedControl::getLedPin());
+
+void onFailure(const String&& message)
+{
+  display.displayText(message.c_str());
+  led.blink(5, 500);
+  ESP.restart();
+}
+
+void displayFinalConnectionInfo()
+{
+  String ip = WiFi.localIP().toString();
+  #ifdef FIRMWARE_GIT_COMMIT_HASH
+    display.displayLines({"WiFi Connected!",
+                          ip,
+                          "OTA: esp32-blinker",
+                          "Commit: " + String(FIRMWARE_GIT_COMMIT_HASH)});
+  #else
+    display.displayLines({"WiFi Connected!",
+                          ip,
+                          "OTA: esp32-blinker"});
+  #endif
+}
 
 void setup() 
 {
@@ -29,35 +51,21 @@ void setup()
   if (!display.isInitialized()) 
     ESP.restart();
 
-  // Initialize stepper motor
-  stepper.begin();
+  stepperMotor.begin();
 
   WiFiManager wm;
-  std::vector<String> setupLines = {
-    "WiFi Setup Mode", 
-    "Connect to:", 
-    "ESP32-Setup"
-  };
-  display.displayLines(setupLines);
-  
-  bool ok = wm.autoConnect("ESP32-Setup");
+  display.displayLines({"WiFi Setup Mode", "Connect to:", "ESP32-Setup"});
 
-  if (!ok) 
+  if (!wm.autoConnect("ESP32-Setup")) 
   {
-    display.displayText("WiFi Connect Failed");
-    Serial.println("Failed to connect. Restarting...");
-    led.blink(5, 500);
-    delay(3000);
-    ESP.restart();
+    onFailure("WiFi Connect Failed");
   }
 
   // Initialize server
   serverManager.init();
   if (!serverManager.isInitialized()) 
   {
-    display.displayText("Server Init Failed");
-    led.blink(5, 500);
-    ESP.restart();
+    onFailure("Server Init Failed");
   }
   
   std::vector<String> serverLines = {
@@ -66,39 +74,21 @@ void setup()
   };
   display.displayLines(serverLines);
 
-  // Initialize OTA
   otaManager.init("esp32-blinker", "haslo123");
   if (!otaManager.isInitialized()) 
   {
-    display.displayText("OTA Init Failed");
-    led.blink(5, 500);
-    ESP.restart();
+    onFailure("OTA Init Failed"); 
   }
   Serial.println("OTA Ready");
 
   // Display final connection info
-  String ip = WiFi.localIP().toString();
-  #ifdef FIRMWARE_GIT_COMMIT_HASH
-    std::vector<String> lines = {
-        "WiFi Connected!",
-        ip,
-        "OTA: esp32-blinker",
-        "Commit: " + String(FIRMWARE_GIT_COMMIT_HASH)
-    };
-    display.displayLines(lines);
-  #else
-    std::vector<String> lines = {
-        "WiFi Connected!",
-        ip,
-        "OTA: esp32-blinker"
-    };
-    display.displayLines(lines);
-  #endif
+
 }
 
 void loop() 
 {
   otaManager.handle();
   serverManager.handleClient();
-  stepper.run();  // Update stepper motor position
+  stepperMotor.run();  // Update stepper motor position
 } 
+

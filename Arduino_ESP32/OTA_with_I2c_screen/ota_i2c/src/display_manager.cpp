@@ -3,7 +3,7 @@
 
 DisplayManager::DisplayManager(int width, int height, int resetPin) : _display(width, height, &Wire, resetPin) {}
 
-bool DisplayManager::begin(uint8_t i2cAddress) 
+bool DisplayManager::init(uint8_t i2cAddress) 
 {
     if (!_display.begin(SSD1306_SWITCHCAPVCC, i2cAddress)) 
     {
