@@ -10,7 +10,7 @@ StepperManager::StepperManager(DisplayManager& display) :
 
 bool StepperManager::init() {
     pinMode(ENABLE_PIN, OUTPUT);
-    digitalWrite(ENABLE_PIN, LOW);  // Enable the stepper driver
+    digitalWrite(ENABLE_PIN, HIGH);  // Disable the stepper driver initially
     
     // Initialize the stepper engine
     _engine.init();
@@ -21,7 +21,7 @@ bool StepperManager::init() {
     {
         _stepper->setDirectionPin(DIR_PIN);
         _stepper->setEnablePin(ENABLE_PIN);
-        _stepper->setAutoEnable(true);
+        _stepper->setAutoEnable(true);  // This will automatically enable/disable the stepper when needed
         
         // Set default speed and acceleration
         _stepper->setSpeedInHz(_currentSpeed);

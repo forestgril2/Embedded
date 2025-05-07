@@ -58,6 +58,7 @@ private:
     long _lastPosition = 0;
     unsigned long _lastPositionTime = 0;
     float _calculatedSpeed = 0.0f;
+    long _targetPosition = 0;  // Track the last set target position
 
     // HTML generation methods
     String generateHeader();

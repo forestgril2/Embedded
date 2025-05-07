@@ -146,25 +146,38 @@ void ServerManager::handleDebug(AsyncWebServerRequest *request) {
 void ServerManager::handleStepperMove(AsyncWebServerRequest *request) {
     if (request->hasParam("position", true)) {
         long position = request->getParam("position", true)->value().toInt();
+        _targetPosition = position;  // Store the target position
         stepper.moveTo(position);
-        request->redirect("/");
+        
+        StaticJsonDocument<128> doc;
+        doc["success"] = true;
+        doc["targetPosition"] = position;
+        String response;
+        serializeJson(doc, response);
+        request->send(200, "application/json", response);
     } else {
-        request->send(400, "text/plain", "Missing 'position' parameter");
+        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing position parameter\"}");
     }
 }
 
 void ServerManager::handleStepperStop(AsyncWebServerRequest *request) {
     stepper.stop();
-    request->redirect("/");
+    request->send(200, "application/json", "{\"success\":true}");
 }
 
 void ServerManager::handleStepperSpeed(AsyncWebServerRequest *request) {
     if (request->hasParam("speed", true)) {
         float speed = request->getParam("speed", true)->value().toFloat();
         stepper.setSpeed(speed);
-        request->redirect("/");
+        
+        StaticJsonDocument<128> doc;
+        doc["success"] = true;
+        doc["speed"] = speed;
+        String response;
+        serializeJson(doc, response);
+        request->send(200, "application/json", response);
     } else {
-        request->send(400, "text/plain", "Missing 'speed' parameter");
+        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing speed parameter\"}");
     }
 }
 
@@ -172,9 +185,15 @@ void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) {
     if (request->hasParam("accel", true)) {
         float accel = request->getParam("accel", true)->value().toFloat();
         stepper.setAcceleration(accel);
-        request->redirect("/");
+        
+        StaticJsonDocument<128> doc;
+        doc["success"] = true;
+        doc["accel"] = accel;
+        String response;
+        serializeJson(doc, response);
+        request->send(200, "application/json", response);
     } else {
-        request->send(400, "text/plain", "Missing 'accel' parameter");
+        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing accel parameter\"}");
     }
 }
 
@@ -262,7 +281,7 @@ String ServerManager::generateHeader() {
     html += "let ws = new WebSocket('ws://' + window.location.hostname + '/ws');";
     html += "ws.onmessage = function(event) {";
     html += "  const data = JSON.parse(event.data);";
-    html += "  document.getElementById('position').textContent = data.position;";
+    html += "  document.getElementById('current-position').textContent = data.position;";
     html += "  document.getElementById('speed').textContent = data.speed.toFixed(1);";
     html += "  document.getElementById('accel').textContent = data.acceleration.toFixed(1);";
     html += "  const statusElem = document.getElementById('status');";
@@ -272,12 +291,36 @@ String ServerManager::generateHeader() {
     html += "  document.getElementById('rssi').textContent = data.rssi;";
     html += "  document.getElementById('heap').textContent = data.freeHeap;";
     html += "};";
+    
+    // Add form submission handling
+    html += "function submitForm(form) {";
+    html += "  event.preventDefault();";
+    html += "  fetch(form.action, {";
+    html += "    method: form.method,";
+    html += "    body: new FormData(form)";
+    html += "  })";
+    html += "  .then(response => response.json())";
+    html += "  .then(data => {";
+    html += "    if (data.success) {";
+    html += "      if (data.targetPosition !== undefined) {";
+    html += "        document.getElementsByName('position')[0].value = data.targetPosition;";
+    html += "      }";
+    html += "      if (data.speed !== undefined) {";
+    html += "        document.getElementsByName('speed')[0].value = data.speed;";
+    html += "      }";
+    html += "      if (data.accel !== undefined) {";
+    html += "        document.getElementsByName('accel')[0].value = data.accel;";
+    html += "      }";
+    html += "    }";
+    html += "  });";
+    html += "  return false;";
+    html += "}";
     html += "</script>";
     html += "</head><body>";
     html += "<h1>ESP32 Stepper Motor Control</h1>";
     html += "<div style='margin-bottom: 20px;'>";
     html += "<h2>Current Status</h2>";
-    html += "<p>Position: <span id='position' class='status-value'>" + String(stepper.getCurrentPosition()) + "</span> steps</p>";
+    html += "<p>Position: <span id='current-position' class='status-value'>" + String(stepper.getCurrentPosition()) + "</span> steps</p>";
     html += "<p>Current Speed: <span id='speed' class='speed-value'>" + String(stepper.getCurrentSpeed(), 1) + "</span> steps/sec</p>";
     html += "<p>Acceleration: <span id='accel' class='status-value'>" + String(stepper.getCurrentAcceleration(), 1) + "</span> steps/sec²</p>";
     html += "<p>Microstepping: 1/" + String(stepper.getMicrosteps()) + " (800 steps/rev)</p>";
@@ -304,7 +347,7 @@ String ServerManager::generateStepperControlForms() {
     String html = "<h2>Stepper Motor Control</h2>";
     
     // Move form
-    html += "<form action=\"/stepper/move\" method=\"POST\">";
+    html += "<form action=\"/stepper/move\" method=\"POST\" onsubmit=\"return submitForm(this);\">";
     html += "Target Position: <input name=\"position\" type=\"number\" value=\"" + String(stepper.getCurrentPosition()) + "\">";
     html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) + 800\">+1 Rev</button>";
     html += "<button type=\"button\" onclick=\"document.getElementsByName('position')[0].value = parseInt(document.getElementsByName('position')[0].value) - 800\">-1 Rev</button>";
@@ -312,19 +355,19 @@ String ServerManager::generateStepperControlForms() {
     html += "</form>";
 
     // Speed form
-    html += "<form action=\"/stepper/speed\" method=\"POST\">";
+    html += "<form action=\"/stepper/speed\" method=\"POST\" onsubmit=\"return submitForm(this);\">";
     html += "Speed (steps/sec): <input name=\"speed\" type=\"number\" value=\"" + String(stepper.getCurrentSpeed()) + "\">";
     html += "<input type=\"submit\" value=\"Set Speed\">";
     html += "</form>";
 
     // Acceleration form
-    html += "<form action=\"/stepper/accel\" method=\"POST\">";
+    html += "<form action=\"/stepper/accel\" method=\"POST\" onsubmit=\"return submitForm(this);\">";
     html += "Acceleration (steps/sec²): <input name=\"accel\" type=\"number\" value=\"" + String(stepper.getCurrentAcceleration()) + "\">";
     html += "<input type=\"submit\" value=\"Set Acceleration\">";
     html += "</form>";
 
     // Stop form
-    html += "<form action=\"/stepper/stop\" method=\"POST\">";
+    html += "<form action=\"/stepper/stop\" method=\"POST\" onsubmit=\"return submitForm(this);\">";
     html += "<input type=\"submit\" value=\"Stop Motor\">";
     html += "</form>";
 
