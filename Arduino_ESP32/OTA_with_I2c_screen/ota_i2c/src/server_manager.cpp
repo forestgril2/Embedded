@@ -30,12 +30,10 @@ bool ServerManager::init() {
 
         // Stepper motor control endpoints
         server.on("/stepper/move", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperMove(request); });
-
         server.on("/stepper/stop", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperStop(request); });
-
         server.on("/stepper/speed", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperSpeed(request); });
-
         server.on("/stepper/accel", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperAccel(request); });
+        server.on("/stepper/torque", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleStepperTorque(request); });
 
         server.on("/led/pin", HTTP_POST, [this](AsyncWebServerRequest *request) { this->handleLedPinConfig(request); });
 
@@ -73,6 +71,7 @@ void ServerManager::broadcastStatus() {
     doc["speed"] = stepper.getCurrentSpeed();
     doc["acceleration"] = stepper.getCurrentAcceleration();
     doc["isRunning"] = stepper.isRunning();
+    doc["holdingTorque"] = stepper.isHoldingTorqueEnabled();
     doc["uptime"] = millis() / 1000;
     doc["rssi"] = WiFi.RSSI();
     doc["freeHeap"] = ESP.getFreeHeap();
@@ -201,6 +200,14 @@ void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) {
     } else {
         sendJsonResponse(request, 400, false, "Missing accel parameter");
     }
+}
+
+void ServerManager::handleStepperTorque(AsyncWebServerRequest *request) {
+    if (request->hasParam("enable", true)) {
+        bool enable = request->getParam("enable", true)->value() == "true";
+        stepper.setHoldingTorque(enable);
+    }
+    request->redirect("/");  // Always redirect back to main page
 }
 
 void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) {
@@ -376,6 +383,12 @@ String ServerManager::generateStepperControlForms() {
     html += "<form action=\"/stepper/stop\" method=\"POST\" onsubmit=\"return submitForm(this);\">";
     html += "<input type=\"submit\" value=\"Stop Motor\">";
     html += "</form>";
+
+    // Holding Torque form - Modified to use a hidden input and proper form submission
+    html += "<form action=\"/stepper/torque\" method=\"POST\">";
+    html += "<label>Holding Torque: <input type=\"checkbox\" name=\"enable\" value=\"true\" " + String(stepper.isHoldingTorqueEnabled() ? "checked" : "") + " onchange=\"this.form.submit()\">";
+    html += "<input type=\"hidden\" name=\"enable\" value=\"false\">";  // This will be sent when checkbox is unchecked
+    html += "</label></form>";
 
     return html;
 }

@@ -19,11 +19,13 @@ public:
     float getCurrentSpeed();
     float getCurrentAcceleration();
     int getMicrosteps();
+    void setHoldingTorque(bool enable);
+    bool isHoldingTorqueEnabled() const;
 
 private:
     DisplayManager& _display;
     FastAccelStepperEngine _engine;
-    FastAccelStepper* _stepper;
+    FastAccelStepper* _stepper = nullptr;
     static const int STEP_PIN = 13;    // GPIO13 for step signal
     static const int DIR_PIN = 14;     // GPIO14 for direction signal
     static const int ENABLE_PIN = 12;  // GPIO12 for enable signal
@@ -35,6 +37,7 @@ private:
     long _lastPosition = 0;
     unsigned long _lastPositionTime = 0;
     float _calculatedSpeed = 0.0f;
+    bool _holdingTorqueEnabled = false;
 };
 
 #endif // STEPPER_MANAGER_H 

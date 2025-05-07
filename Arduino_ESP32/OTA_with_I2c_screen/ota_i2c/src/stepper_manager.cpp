@@ -122,4 +122,26 @@ float StepperManager::getCurrentAcceleration()
 int StepperManager::getMicrosteps() 
 {
     return MICROSTEPS;
+}
+
+void StepperManager::setHoldingTorque(bool enable) 
+{
+    if (_stepper) 
+    {
+        _holdingTorqueEnabled = enable;
+        if (enable) {
+            _stepper->setAutoEnable(false);  // Disable auto-enable when holding torque is enabled
+            _stepper->enableOutputs();       // Explicitly enable outputs
+        } else {
+            _stepper->setAutoEnable(true);   // Re-enable auto-enable when holding torque is disabled
+            if (!isRunning()) {
+                _stepper->disableOutputs();  // Only disable outputs if not running
+            }
+        }
+    }
+}
+
+bool StepperManager::isHoldingTorqueEnabled() const 
+{
+    return _holdingTorqueEnabled;
 } 
