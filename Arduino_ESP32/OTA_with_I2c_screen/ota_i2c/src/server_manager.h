@@ -54,11 +54,21 @@ private:
     unsigned long _lastStatusUpdate = 0;
     const unsigned long STATUS_UPDATE_INTERVAL = 250; // Update every 250ms
     
+    // WebSocket status tracking
+    bool _wsConnected = false;
+    unsigned long _lastWsReconnectAttempt = 0;
+    const unsigned long WS_RECONNECT_INTERVAL = 5000; // Try to reconnect every 5 seconds
+    
     // Speed calculation variables
     long _lastPosition = 0;
     unsigned long _lastPositionTime = 0;
     float _calculatedSpeed = 0.0f;
     long _targetPosition = 0;  // Track the last set target position
+
+    // Helper methods
+    void sendJsonResponse(AsyncWebServerRequest *request, int code, bool success, const char* error = nullptr);
+    template<typename T>
+    void sendJsonResponse(AsyncWebServerRequest *request, int code, bool success, const char* key, T value, const char* error = nullptr);
 
     // HTML generation methods
     String generateHeader();

@@ -143,41 +143,53 @@ void ServerManager::handleDebug(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", debugInfo);
 }
 
+void ServerManager::sendJsonResponse(AsyncWebServerRequest *request, int code, bool success, const char* error) {
+    StaticJsonDocument<128> doc;
+    doc["success"] = success;
+    if (error) {
+        doc["error"] = error;
+    }
+    String response;
+    serializeJson(doc, response);
+    request->send(code, "application/json", response);
+}
+
+template<typename T>
+void ServerManager::sendJsonResponse(AsyncWebServerRequest *request, int code, bool success, const char* key, T value, const char* error) {
+    StaticJsonDocument<128> doc;
+    doc["success"] = success;
+    doc[key] = value;
+    if (error) {
+        doc["error"] = error;
+    }
+    String response;
+    serializeJson(doc, response);
+    request->send(code, "application/json", response);
+}
+
 void ServerManager::handleStepperMove(AsyncWebServerRequest *request) {
     if (request->hasParam("position", true)) {
         long position = request->getParam("position", true)->value().toInt();
         _targetPosition = position;  // Store the target position
         stepper.moveTo(position);
-        
-        StaticJsonDocument<128> doc;
-        doc["success"] = true;
-        doc["targetPosition"] = position;
-        String response;
-        serializeJson(doc, response);
-        request->send(200, "application/json", response);
+        sendJsonResponse(request, 200, true, "targetPosition", position);
     } else {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing position parameter\"}");
+        sendJsonResponse(request, 400, false, "Missing position parameter");
     }
 }
 
 void ServerManager::handleStepperStop(AsyncWebServerRequest *request) {
     stepper.stop();
-    request->send(200, "application/json", "{\"success\":true}");
+    sendJsonResponse(request, 200, true);
 }
 
 void ServerManager::handleStepperSpeed(AsyncWebServerRequest *request) {
     if (request->hasParam("speed", true)) {
         float speed = request->getParam("speed", true)->value().toFloat();
         stepper.setSpeed(speed);
-        
-        StaticJsonDocument<128> doc;
-        doc["success"] = true;
-        doc["speed"] = speed;
-        String response;
-        serializeJson(doc, response);
-        request->send(200, "application/json", response);
+        sendJsonResponse(request, 200, true, "speed", speed);
     } else {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing speed parameter\"}");
+        sendJsonResponse(request, 400, false, "Missing speed parameter");
     }
 }
 
@@ -185,15 +197,9 @@ void ServerManager::handleStepperAccel(AsyncWebServerRequest *request) {
     if (request->hasParam("accel", true)) {
         float accel = request->getParam("accel", true)->value().toFloat();
         stepper.setAcceleration(accel);
-        
-        StaticJsonDocument<128> doc;
-        doc["success"] = true;
-        doc["accel"] = accel;
-        String response;
-        serializeJson(doc, response);
-        request->send(200, "application/json", response);
+        sendJsonResponse(request, 200, true, "accel", accel);
     } else {
-        request->send(400, "application/json", "{\"success\":false,\"error\":\"Missing accel parameter\"}");
+        sendJsonResponse(request, 400, false, "Missing accel parameter");
     }
 }
 
