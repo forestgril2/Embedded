@@ -27,6 +27,9 @@ public:
     void handleClient();
     void handleText(AsyncWebServerRequest *request);
     void handleRoot(AsyncWebServerRequest *request);
+    void handleLedPage(AsyncWebServerRequest *request);
+    void handlePinPage(AsyncWebServerRequest *request);
+    void handleSystemPage(AsyncWebServerRequest *request);
     void handleMemoryStatus(AsyncWebServerRequest *request);
     void handleVersion(AsyncWebServerRequest *request);
     void handleDebug(AsyncWebServerRequest *request);
