@@ -9,6 +9,7 @@
 #include "git_version.h"
 #include "config.h"
 #include "pin_manager.h"
+#include "main_setup_helpers.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -21,28 +22,6 @@ ServerManager serverManager(display, stepperMotor, pinManager);
 OTAManager otaManager(display);
 LedControl led(LedControl::getLedPin());
 
-void onFailure(const String&& message)
-{
-  display.displayText(message.c_str());
-  led.blink(5, 500);
-  ESP.restart();
-}
-
-void displayFinalConnectionInfo()
-{
-  String ip = WiFi.localIP().toString();
-  #ifdef FIRMWARE_GIT_COMMIT_HASH
-    display.displayLines({"WiFi Connected!",
-                          ip,
-                          "OTA: esp32-blinker",
-                          "Hash: " + String(FIRMWARE_GIT_COMMIT_HASH)});
-  #else
-    display.displayLines({"WiFi Connected!",
-                          ip,
-                          "OTA: esp32-blinker"});
-  #endif
-}
-
 void setup() 
 {
   Serial.begin(115200);
@@ -52,27 +31,27 @@ void setup()
     ESP.restart();
 
   if (!pinManager.init())
-    onFailure("Pin Manager Init Failed");
+    onFailure("Pin Manager Init Failed", display, led);
 
   if (!stepperMotor.init())
-    onFailure("Stepper Init Failed");
+    onFailure("Stepper Init Failed", display, led);
 
   WiFiManager wm;
   display.displayLines({"WiFi Setup Mode", "Connect to:", "ESP32-Setup"});
 
   if (!wm.autoConnect("ESP32-Setup")) 
-    onFailure("WiFi Connect Failed");
+    onFailure("WiFi Connect Failed", display, led);
 
   if (!serverManager.init())
-    onFailure("Server Init Failed");
+    onFailure("Server Init Failed", display, led);
   
   display.displayLines({"HTTP server started", WiFi.localIP().toString()});
 
   if (!otaManager.init("esp32-blinker", "haslo123"))
-    onFailure("OTA Init Failed"); 
+    onFailure("OTA Init Failed", display, led); 
   Serial.println("OTA Ready");
 
-  displayFinalConnectionInfo();
+  displayFinalConnectionInfo(display);
 }
 
 void loop() 
