@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <functional>
+#include <memory>  // For shared_ptr
 #include "limit_switch.h"
 #include "display_manager.h"
 
@@ -12,6 +13,8 @@ public:
     using SignalHandlerFunc = std::function<void(const char*)>;
     
     ControlSignalHandler(DisplayManager& display);
+    // No need for explicit destructor with shared_ptr
+    
     bool init();
     void handle();
     
@@ -25,7 +28,7 @@ public:
     
 private:
     DisplayManager& _display;
-    std::vector<LimitSwitch> _limitSwitches;
+    std::vector<std::shared_ptr<LimitSwitch>> _limitSwitches;  // Using shared_ptr
     SignalHandlerFunc _signalHandler;
     bool _initialized;
     
