@@ -27,6 +27,7 @@ void displayFinalConnectionInfo(DisplayManager& display) {
                             ip,
                             "OTA: esp32-blinker"});
     #endif
+    Serial.println("WiFi connection ready");
 }
 
 #endif // MAIN_SETUP_HELPERS_H 

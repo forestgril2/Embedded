@@ -1,42 +1,68 @@
 #pragma once
 
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <ArduinoJson.h>
 #include "display_manager.h"
+#include "flash_controller.h"
 
 class PinManager {
 public:
-    struct PinConfig {
-        int8_t stepperStepPin;
-        int8_t stepperDirPin;
-        int8_t stepperEnablePin;
-        int8_t displaySdaPin;
-        int8_t displaySclPin;
-        int8_t displayResetPin;
-        int8_t ledPin;
-    };
+    using PinConfig = FlashController::PinConfig;
 
-    // TODO: I2C pins (SDA/SCL) should not be configurable on ESP32 as they are fixed
-    // TODO: Consider removing displayResetPin as it's not used (-1)
-    // TODO: Consider adding validation for I2C pins to prevent configuration
-    // TODO: Add method to validate entire config at once instead of individual pins
-    // TODO: Add method to check if config is valid before saving
-    // TODO: Consider adding a method to reset to defaults without saving to EEPROM
-    // TODO: Add method to check if current config matches defaults
-
-    static const int EEPROM_SIZE = 512;
-    static const int CONFIG_ADDRESS = 0;
-    static const uint32_t CONFIG_VERSION = 1;
     static const PinConfig DEFAULT_CONFIG;
 
     PinManager(DisplayManager& display) : display(display) {}
-    bool init();
-    void saveConfig(const PinConfig& config);
-    PinConfig loadConfig();
-    String getConfigJson();
-    static bool validatePin(int8_t pin);
-    void setDefaultConfig();
+    
+    bool init() {
+        Serial.println("PinManager::init() called");
+        return FlashController::init();
+    }
+    
+    void saveConfig(const PinConfig& config) {
+        Serial.println("PinManager::saveConfig() called");
+        config.print();
+        if (!FlashController::writePinConfig(config)) {
+            Serial.println("Failed to save pin configuration");
+        }
+    }
+    
+    PinConfig loadConfig() {
+        Serial.println("PinManager::loadConfig() called");
+        PinConfig config;
+        if (!FlashController::readPinConfig(config)) {
+            Serial.println("Failed to read pin configuration, using defaults");
+            config = DEFAULT_CONFIG;
+            saveConfig(config);
+        }
+        config.print();
+        return config;
+    }
+    
+    String getConfigJson() {
+        PinConfig config = loadConfig();
+        StaticJsonDocument<256> doc;
+        
+        doc["stepperStepPin"] = config.stepperStepPin;
+        doc["stepperDirPin"] = config.stepperDirPin;
+        doc["stepperEnablePin"] = config.stepperEnablePin;
+        doc["displaySdaPin"] = config.displaySdaPin;
+        doc["displaySclPin"] = config.displaySclPin;
+        doc["displayResetPin"] = config.displayResetPin;
+        doc["ledPin"] = config.ledPin;
+        
+        String output;
+        serializeJson(doc, output);
+        return output;
+    }
+    
+    static bool validatePin(int8_t pin) {
+        return pin > 0 && pin < 40;
+    }
+    
+    void setDefaultConfig() {
+        Serial.println("Setting default pin configuration");
+        saveConfig(DEFAULT_CONFIG);
+    }
 
 private:
     DisplayManager& display;

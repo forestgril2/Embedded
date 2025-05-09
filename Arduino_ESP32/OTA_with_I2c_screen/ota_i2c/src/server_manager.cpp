@@ -257,7 +257,7 @@ void ServerManager::handleLedPinConfig(AsyncWebServerRequest *request) {
 void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
     int ledPin = LedControl::getLedPin();
     LedControl led(ledPin);
-    led.begin();
+    led.init();
     led.blink(3, 200);  // Blink 3 times with 200ms delay
     request->send(200, "text/plain", "LED test completed on pin " + String(ledPin));
 }

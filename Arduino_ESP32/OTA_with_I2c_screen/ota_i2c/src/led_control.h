@@ -2,20 +2,19 @@
 #define LED_CONTROL_H
 
 #include <Arduino.h>
-#include <EEPROM.h>
+#include "flash_controller.h"
 
 class LedControl 
 {
 public:
     static const int DEFAULT_LED_PIN = 1;  // Default LED pin
-    static const int LED_PIN_EEPROM_ADDR = 0;  // EEPROM address to store LED pin
     static const bool LED_ACTIVE_LOW = true;  // Set to true if LED is active low
 
-    LedControl(int pin) : _pin(pin) 
+    LedControl(int pin = DEFAULT_LED_PIN) : _pin(pin) 
     {
     }
     
-    void begin() 
+    void init() 
     {
         pinMode(_pin, OUTPUT);
         setLedOff();  // Start with LED off
@@ -31,7 +30,7 @@ public:
             delay(delayMs);
         }
     }
-    
+
     void on() 
     {
         setLedOn();
@@ -42,41 +41,25 @@ public:
         setLedOff();
     }
 
-    // Static method to get LED pin from EEPROM or return default
+    // Static method to get LED pin from Flash or return default
     static int getLedPin() 
     {
-        static bool eepromInitialized = false;
-        if (!eepromInitialized) 
-        {
-            EEPROM.begin(1);  // Initialize EEPROM with 1 byte
-            eepromInitialized = true;
-        }
-        
-        int pin = EEPROM.read(LED_PIN_EEPROM_ADDR);
-        // If pin is 0 or invalid, return default
-        if (pin <= 0 || pin >= 40) 
-        {
+        Serial.println("LedControl::getLedPin() called");
+        int pin = FlashController::readLedPin();
+        if (pin < 0) {
+            Serial.println("Failed to read LED pin from Flash, using default");
             pin = DEFAULT_LED_PIN;
-            // Save default to EEPROM
-            EEPROM.write(LED_PIN_EEPROM_ADDR, pin);
-            EEPROM.commit();
+            FlashController::writeLedPin(pin);
         }
         return pin;
     }
 
-    // Static method to save LED pin to EEPROM
+    // Static method to save LED pin to Flash
     static void saveLedPin(int pin) 
     {
-        if (pin > 0 && pin < 40)  // Validate pin number
-        {
-            static bool eepromInitialized = false;
-            if (!eepromInitialized) 
-            {
-                EEPROM.begin(1);
-                eepromInitialized = true;
-            }
-            EEPROM.write(LED_PIN_EEPROM_ADDR, pin);
-            EEPROM.commit();
+        Serial.printf("LedControl::saveLedPin() called with pin: %d\n", pin);
+        if (!FlashController::writeLedPin(pin)) {
+            Serial.printf("Failed to save LED pin %d to Flash\n", pin);
         }
     }
 
