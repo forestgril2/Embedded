@@ -22,7 +22,7 @@ PinManager pinManager(display);
 StepperManager stepperMotor(display);
 ServerManager serverManager(display, stepperMotor, pinManager);
 OTAManager otaManager(display);
-LedControl led(LedControl::getLedPin());  // Fixed LED initialization
+LedControl led;  // Fixed LED initialization
 ControlSignalHandler signalHandler(display);
 
 void setup() 

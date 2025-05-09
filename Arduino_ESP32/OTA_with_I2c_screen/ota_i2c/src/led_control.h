@@ -7,7 +7,7 @@
 class LedControl 
 {
 public:
-    static const int DEFAULT_LED_PIN = 1;  // Default LED pin
+    static const int DEFAULT_LED_PIN = 2;  // Changed from 1 to 2 to avoid UART TX pin
     static const bool LED_ACTIVE_LOW = true;  // Set to true if LED is active low
 
     LedControl(int pin = DEFAULT_LED_PIN) : _pin(pin) 
@@ -16,12 +16,19 @@ public:
     
     void init() 
     {
+        Serial.println("LedControl::init() called");
+        Serial.flush();
         pinMode(_pin, OUTPUT);
+        Serial.printf("LED pin mode %d, output\n", _pin, OUTPUT);
+        Serial.flush();
         setLedOff();  // Start with LED off
+        Serial.printf("LED initialized on pin %d\n", _pin);
+        Serial.flush();
     }
     
     void blink(int count, int delayMs) 
     {
+        Serial.printf("LedControl::blink() called with count: %d, delay: %dms\n", count, delayMs);
         for (int i = 0; i < count; i++) 
         {
             setLedOn();
@@ -29,15 +36,18 @@ public:
             setLedOff();
             delay(delayMs);
         }
+        Serial.println("Blink sequence completed");
     }
 
     void on() 
     {
+        Serial.println("LedControl::on() called");
         setLedOn();
     }
     
     void off() 
     {
+        Serial.println("LedControl::off() called");
         setLedOff();
     }
 
