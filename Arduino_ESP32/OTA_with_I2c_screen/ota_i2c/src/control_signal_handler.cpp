@@ -10,18 +10,7 @@ bool ControlSignalHandler::init() {
 }
 
 void ControlSignalHandler::handle() {
-    if (!_initialized) return;
-    
-    // Check all limit switches
-    for (auto& sw : _limitSwitches) {
-        bool triggered = sw.isTriggered();
-        Serial.printf("Checking switch %s on pin %d: %d\n", 
-                     sw.getId(), sw.getPin(), triggered);
-        
-        if (triggered) {
-            onSwitchActivated(sw.getId());
-        }
-    }
+    // No polling needed - switches are handled by interrupts
 }
 
 bool ControlSignalHandler::addLimitSwitch(uint8_t pin, const char* id, bool activeLow) {
