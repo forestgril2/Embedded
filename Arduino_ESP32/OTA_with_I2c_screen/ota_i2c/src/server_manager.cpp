@@ -5,6 +5,7 @@
 #include "led_control.h"
 #include "memory_manager.h"
 #include "pin_manager.h"
+#include "my_wifi_manager.h"
 
 ServerManager::ServerManager(DisplayManager& display, StepperManager& stepper, PinManager& pinManager) 
     : server(80), ws("/ws"), display(display), stepper(stepper), pinManager(pinManager) {}
@@ -265,7 +266,7 @@ void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
 void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Resetting WiFi configuration...");
     delay(1000);  // Give time for response to be sent
-    WiFi.disconnect(true);
+    MyWiFiManager::resetSettings();
     ESP.restart();
 }
 
