@@ -266,7 +266,7 @@ void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
 void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
     request->send(200, "text/plain", "Resetting WiFi configuration...");
     delay(1000);  // Give time for response to be sent
-    MyWiFiManager::resetSettings();
+    MyWiFiManager::instance().resetSettings();
     ESP.restart();
 }
 

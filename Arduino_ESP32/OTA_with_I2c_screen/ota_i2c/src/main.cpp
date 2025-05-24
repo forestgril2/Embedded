@@ -1,4 +1,3 @@
-#include <WiFiManager.h>
 #include <WiFi.h>
 #include <Wire.h>
 #include "ota_manager.h"
@@ -12,6 +11,7 @@
 #include "main_setup_helpers.h"
 #include "control_signal_handler.h"
 #include "flash_controller.h"
+#include "my_wifi_manager.h"
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -139,10 +139,9 @@ void setup()
   Serial.flush();
   delay(50);
 
-  WiFiManager wm;
   display.displayLines({"WiFi Setup Mode", "Connect to:", "ESP32-Setup"});
 
-  if (!wm.autoConnect("ESP32-Setup")) {
+  if (!MyWiFiManager::instance().autoConnect("ESP32-Setup")) {
     Serial.print("WIFI_ERR\r\n");
     Serial.flush();
     onFailure("WiFi Connect Failed", display, led);
