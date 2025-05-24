@@ -20,12 +20,12 @@ void displayFinalConnectionInfo(DisplayManager& display) {
     #ifdef FIRMWARE_GIT_COMMIT_HASH
         display.displayLines({"WiFi Connected!",
                             ip,
-                            "OTA: esp32-blinker",
+                            "OTA: esp32-servo-tester",
                             "Hash: " + String(FIRMWARE_GIT_COMMIT_HASH)});
     #else
         display.displayLines({"WiFi Connected!",
                             ip,
-                            "OTA: esp32-blinker"});
+                            "OTA: esp32-servo-tester"});
     #endif
     Serial.println("WiFi connection ready");
 }

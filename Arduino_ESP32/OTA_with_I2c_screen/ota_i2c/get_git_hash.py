@@ -33,14 +33,6 @@ def generate_version_header(git_hash):
     with open("src/git_version.h", "w") as f:
         f.write(header_content)
 
-
-if __name__ == "__main__":
-    git_hash = get_git_hash()
-    print(f"Current git hash: {git_hash}")
-    generate_version_header(git_hash)
-else:
-    # This part is for PlatformIO
-    Import("env")
-    git_hash = get_git_hash()
-    print(f"Current git hash: {git_hash}")
-    generate_version_header(git_hash)
+git_hash = get_git_hash()
+print(f"current git hash: {git_hash}")
+generate_version_header(git_hash)
