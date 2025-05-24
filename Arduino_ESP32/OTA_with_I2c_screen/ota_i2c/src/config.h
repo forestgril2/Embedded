@@ -8,7 +8,7 @@
 #define WIFI_CONFIG_TIMEOUT 180  // 3 minutes timeout
 
 // OTA Configuration
-#define OTA_HOSTNAME "esp32-blinker"
+#define OTA_HOSTNAME "esp32-servo-tester"
 #define OTA_PASSWORD "haslo123"  // Change this in production!
 
 // Hardware Configuration

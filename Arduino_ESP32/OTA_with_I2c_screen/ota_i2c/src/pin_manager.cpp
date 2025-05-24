@@ -10,5 +10,3 @@ const PinManager::PinConfig PinManager::DEFAULT_CONFIG = {
     .displayResetPin = -1,   // Not used
     .ledPin = 1             // Default LED pin
 };
-
-// All method implementations have been moved to the header file as inline methods 
