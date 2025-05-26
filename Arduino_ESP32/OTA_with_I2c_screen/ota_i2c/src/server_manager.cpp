@@ -264,10 +264,44 @@ void ServerManager::handleLedTest(AsyncWebServerRequest *request) {
 }
 
 void ServerManager::handleWifiReset(AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "Resetting WiFi configuration...");
-    delay(1000);  // Give time for response to be sent
+    // First send a response that will stay visible
+    String html = "<html><body>";
+    html += "<h1>Resetting WiFi Configuration</h1>";
+    html += "<p>Please wait while the device resets...</p>";
+    html += "<p>You will need to reconnect to the ESP32-Setup access point after the reset.</p>";
+    html += "</body></html>";
+    request->send(200, "text/html", html);
+    
+    // Give time for the response to be sent and received
+    delay(2000);
+    
+    // Now do the actual reset
+    Serial.println("Starting WiFi reset...");
     MyWiFiManager::instance().resetSettings();
+    Serial.println("WiFi reset complete, forcing restart...");
+    
+    // Final delay to ensure everything is complete
+    delay(2000);
+    
+    // Force restart using multiple methods
+    Serial.println("Forcing restart...");
+    Serial.flush();
+    delay(100);
+    
+    // Try multiple restart methods
     ESP.restart();
+    delay(1000);
+    
+    // If ESP.restart() didn't work, try more forceful methods
+    esp_restart();
+    delay(1000);
+    
+    // Last resort: force a watchdog reset
+    esp_task_wdt_init(1, true);
+    esp_task_wdt_add(NULL);
+    while(1) {
+        delay(1000);
+    }
 }
 
 void ServerManager::handlePinConfig(AsyncWebServerRequest *request) {
