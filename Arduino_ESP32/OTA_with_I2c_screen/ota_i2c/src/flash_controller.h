@@ -15,7 +15,7 @@ public:
     static const int PIN_CONFIG_SIZE = 32;     // Reserve 32 bytes for pin config
     
     // Pin configuration addresses
-    static const int LED_PIN_ADDR = PIN_CONFIG_START;
+    static const int LED_PIN_ADDR = PIN_CONFIG_START + PIN_CONFIG_SIZE;
     static const int LED_PIN_SIZE = 1;
     
     static const int STEPPER_STEP_PIN_ADDR = LED_PIN_ADDR + LED_PIN_SIZE;
@@ -107,7 +107,7 @@ public:
 
     // LED pin methods
     static int8_t readLedPin() {
-        if (!init()) return -1;
+        if (!_initialized) return -1;
         
         int8_t pin = EEPROM.read(LED_PIN_ADDR);
         log(LogLevel::DEBUG, "Read LED pin from Flash: %d", pin);
@@ -121,7 +121,7 @@ public:
     }
 
     static bool writeLedPin(int8_t pin) {
-        if (!init()) return false;
+        if (!_initialized) return false;
         
         if (pin > 0 && pin < 40) {
             log(LogLevel::DEBUG, "Writing LED pin to Flash: %d", pin);
@@ -152,7 +152,7 @@ public:
     };
 
     static bool readPinConfig(PinConfig& config) {
-        if (!init()) return false;
+        if (!_initialized) return false;
         
         log(LogLevel::DEBUG, "Reading pin configuration");
         
@@ -173,7 +173,7 @@ public:
     }
 
     static bool writePinConfig(const PinConfig& config) {
-        if (!init()) return false;
+        if (!_initialized) return false;
         
         log(LogLevel::DEBUG, "Writing pin configuration");
         
@@ -197,7 +197,7 @@ public:
 
     // Version control methods
     static uint32_t readVersion() {
-        if (!init()) return 0;
+        if (!_initialized) return 0;
         
         uint32_t version = 0;
         EEPROM.get(VERSION_ADDR, version);
@@ -206,7 +206,7 @@ public:
     }
 
     static void writeVersion(uint32_t version) {
-        if (!init()) return;
+        if (!_initialized) return;
         
         EEPROM.put(VERSION_ADDR, version);
         commit();
@@ -216,7 +216,7 @@ public:
     // Generic read/write methods
     template<typename T>
     static bool read(int address, T& value) {
-        if (!init()) return false;
+        if (!_initialized) return false;
         if (address < 0 || address + sizeof(T) > TOTAL_FLASH_SIZE) {
             log(LogLevel::ERROR, "Invalid address range for read: %d, size: %d", 
                 address, sizeof(T));
@@ -230,7 +230,7 @@ public:
 
     template<typename T>
     static bool write(int address, const T& value) {
-        if (!init()) return false;
+        if (!_initialized) return false;
         if (address < 0 || address + sizeof(T) > TOTAL_FLASH_SIZE) {
             log(LogLevel::ERROR, "Invalid address range for write: %d, size: %d", 
                 address, sizeof(T));
