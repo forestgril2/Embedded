@@ -7,7 +7,7 @@
 class LedControl 
 {
 public:
-    static const int DEFAULT_LED_PIN = 2;  // Changed from 1 to 2 to avoid UART TX pin
+    static const int DEFAULT_LED_PIN = 2;
     static const bool LED_ACTIVE_LOW = true;  // Set to true if LED is active low
 
     LedControl(int pin = DEFAULT_LED_PIN) : _pin(pin) 

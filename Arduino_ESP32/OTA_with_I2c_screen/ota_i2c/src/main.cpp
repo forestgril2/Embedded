@@ -41,20 +41,6 @@ void setup()
   }
   Serial.println("Flash controller initialized");
   
-  // Basic Serial test
-  Serial.print("TEST1\r\n");
-  Serial.flush();
-  delay(100);
-  
-  Serial.print("TEST2\r\n");
-  Serial.flush();
-  delay(100);
-  
-  Serial.printf("LED Pin: %d\r\n", LedControl::getLedPin());
-  Serial.flush();
-  delay(100);
-  
-
   // Now proceed with initialization
   led.init();
   Serial.print("LED_OK\r\n");
