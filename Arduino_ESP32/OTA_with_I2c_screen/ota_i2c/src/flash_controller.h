@@ -24,11 +24,6 @@ public:
     static const int DISPLAY_SDA_PIN_ADDR = STEPPER_ENABLE_PIN_ADDR + 1;
     static const int DISPLAY_SCL_PIN_ADDR = DISPLAY_SDA_PIN_ADDR + 1;
     static const int DISPLAY_RESET_PIN_ADDR = DISPLAY_SCL_PIN_ADDR + 1;
-    
-    // Version control
-    static const uint32_t CURRENT_VERSION = 1;
-    static const int VERSION_ADDR = PIN_CONFIG_START + PIN_CONFIG_SIZE;
-    static const int VERSION_SIZE = 4;
 
     // Debug logging levels
     enum class LogLevel {
@@ -41,7 +36,6 @@ public:
 
 private:
     static bool _initialized;
-    static uint32_t _version;
     static LogLevel _logLevel;
     static const char* _logPrefix;
 
@@ -56,20 +50,6 @@ private:
         }
     }
 
-    static bool migrateData(uint32_t fromVersion, uint32_t toVersion) {
-        log(LogLevel::INFO, "Migrating data from version %d to %d", fromVersion, toVersion);
-        
-        // Example migration logic
-        if (fromVersion == 0 && toVersion == 1) {
-            // Migrate from no version to version 1
-            // This could involve restructuring data, adding new fields, etc.
-            log(LogLevel::INFO, "Performing migration to version 1");
-            // Add migration steps here
-        }
-        
-        return true;
-    }
-
 public:
     static void setLogLevel(LogLevel level) {
         _logLevel = level;
@@ -80,20 +60,6 @@ public:
             log(LogLevel::INFO, "Initializing Flash controller");
             EEPROM.begin(TOTAL_FLASH_SIZE);
             _initialized = true;
-            
-            // Check version
-            _version = readVersion();
-            if (_version != CURRENT_VERSION) {
-                log(LogLevel::WARN, "Flash version mismatch. Current: %d, Stored: %d", 
-                    CURRENT_VERSION, _version);
-                if (migrateData(_version, CURRENT_VERSION)) {
-                    writeVersion(CURRENT_VERSION);
-                    log(LogLevel::INFO, "Migration completed successfully");
-                } else {
-                    log(LogLevel::ERROR, "Migration failed");
-                    return false;
-                }
-            }
         }
         return _initialized;
     }
@@ -193,24 +159,6 @@ public:
             config.displaySdaPin, config.displaySclPin, config.displayResetPin, config.ledPin);
         
         return true;
-    }
-
-    // Version control methods
-    static uint32_t readVersion() {
-        if (!_initialized) return 0;
-        
-        uint32_t version = 0;
-        EEPROM.get(VERSION_ADDR, version);
-        log(LogLevel::DEBUG, "Read version from Flash: %d", version);
-        return version;
-    }
-
-    static void writeVersion(uint32_t version) {
-        if (!_initialized) return;
-        
-        EEPROM.put(VERSION_ADDR, version);
-        commit();
-        log(LogLevel::DEBUG, "Wrote version to Flash: %d", version);
     }
 
     // Generic read/write methods
